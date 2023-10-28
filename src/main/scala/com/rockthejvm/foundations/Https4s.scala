@@ -1,12 +1,10 @@
 package com.rockthejvm.foundations
 
 import cats.*
-import cats.implicits.*
-import cats.Monad
 import cats.effect.{IO, IOApp}
+import cats.implicits.*
 import io.circe.generic.auto.*
 import io.circe.syntax.*
-import org.http4s.{Header, HttpRoutes}
 import org.http4s.circe.*
 import org.http4s.dsl.Http4sDsl
 import org.http4s.dsl.impl.{
@@ -16,6 +14,7 @@ import org.http4s.dsl.impl.{
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.headers.*
 import org.http4s.server.Router
+import org.http4s.{Header, HttpRoutes}
 import org.typelevel.ci.CIString
 
 import java.util.UUID
