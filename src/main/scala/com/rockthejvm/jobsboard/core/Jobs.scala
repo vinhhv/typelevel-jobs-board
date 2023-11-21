@@ -25,8 +25,8 @@ trait Jobs[F[_]] {
 /*
   id         : UUID,
   date       : Long,
+  ownerEmail : String,
   company    : String,
-  ownerEmail : String
   title      : String,
   description: String,
   externalUrl: String,
@@ -42,12 +42,12 @@ trait Jobs[F[_]] {
   other      : Option[String],
   active     : Boolean
  */
-class LiveJobs[F[_]: MonadCancelThrow] private (xa: Transactor[F])
-    extends Jobs[F] {
+class LiveJobs[F[_]: MonadCancelThrow] private (xa: Transactor[F]) extends Jobs[F] {
   def create(ownerEmail: String, jobInfo: JobInfo): F[UUID] =
     sql"""
       INSERT INTO jobs(
         date,
+        ownerEmail,
         company,
         title,
         description,
@@ -90,6 +90,7 @@ class LiveJobs[F[_]: MonadCancelThrow] private (xa: Transactor[F])
       SELECT
         id,
         date,
+        ownerEmail,
         company,
         title,
         description,
@@ -115,6 +116,7 @@ class LiveJobs[F[_]: MonadCancelThrow] private (xa: Transactor[F])
     SELECT
       id,
       date,
+      ownerEmail,
       company,
       title,
       description,
@@ -171,8 +173,8 @@ object LiveJobs {
     (
         UUID,                 // id
         Long,                 // date
-        String,               // company
         String,               // ownerEmail
+        String,               // company
         String,               // title
         String,               // description
         String,               // externalUrl
@@ -199,14 +201,14 @@ object LiveJobs {
           externalUrl: String,
           remote: Boolean,
           location: String,
-          salaryLo: Option[Int],
-          salaryHi: Option[Int],
-          currency: Option[String],
-          country: Option[String],
-          tags: Option[List[String]],
-          image: Option[String],
-          seniority: Option[String],
-          other: Option[String],
+          salaryLo: Option[Int] @unchecked,
+          salaryHi: Option[Int] @unchecked,
+          currency: Option[String] @unchecked,
+          country: Option[String] @unchecked,
+          tags: Option[List[String]] @unchecked,
+          image: Option[String] @unchecked,
+          seniority: Option[String] @unchecked,
+          other: Option[String] @unchecked,
           active: Boolean
         ) =>
       Job(

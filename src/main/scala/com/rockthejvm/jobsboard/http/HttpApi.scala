@@ -12,7 +12,7 @@ import org.typelevel.log4cats.Logger
 
 class HttpApi[F[_]: Concurrent: Logger] private {
   private val healthRoutes = HealthRoutes[F].routes
-  private val jobRoutes = JobRoutes[F].routes
+  private val jobRoutes    = JobRoutes[F].routes
 
   val endpoints = Router(
     "/api" -> (healthRoutes <+> jobRoutes)

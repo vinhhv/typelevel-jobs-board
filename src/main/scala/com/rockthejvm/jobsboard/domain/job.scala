@@ -46,5 +46,30 @@ object job {
         None,
         None
       )
+
+    def minimal(
+        company: String,
+        title: String,
+        description: String,
+        externalUrl: String,
+        remote: Boolean,
+        location: String
+    ): JobInfo =
+      JobInfo(
+        company,
+        title,
+        description,
+        externalUrl,
+        remote,
+        location,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None
+      )
   }
 }
