@@ -8,5 +8,7 @@ object pagination {
 
     def apply(maybeLimit: Option[Int], maybeOffset: Option[Int]) =
       new Pagination(maybeLimit.getOrElse(defaultPageSize), maybeOffset.getOrElse(0))
+
+    def default = new Pagination(limit = defaultPageSize, offset = 0)
   }
 }

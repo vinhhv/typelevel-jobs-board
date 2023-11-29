@@ -3,6 +3,8 @@ package com.rockthejvm.jobsboard.core
 import cats.effect.*
 import cats.implicits.*
 import cats.effect.testing.scalatest.AsyncIOSpec
+import com.rockthejvm.jobsboard.domain.job.*
+import com.rockthejvm.jobsboard.domain.pagination.*
 import com.rockthejvm.jobsboard.fixtures.*
 import doobie.implicits.*
 import doobie.postgres.implicits.*
@@ -108,6 +110,28 @@ class JobsSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with DoobieS
       } yield numberOfDeletedJobs
 
       program.asserting(_ shouldBe 0)
+    }
+  }
+
+  "should filter remote jobs" in {
+    transactor.use { xa =>
+      val program = for {
+        jobs         <- LiveJobs[IO](xa)
+        filteredJobs <- jobs.all(JobFilter(remote = true), Pagination.default)
+      } yield filteredJobs
+
+      program.asserting(_ shouldBe List())
+    }
+  }
+
+  "should filter jobs by tags" in {
+    transactor.use { xa =>
+      val program = for {
+        jobs         <- LiveJobs[IO](xa)
+        filteredJobs <- jobs.all(JobFilter(tags = List("scala", "cats", "zio")), Pagination.default)
+      } yield filteredJobs
+
+      program.asserting(_ shouldBe List(AwesomeJob))
     }
   }
 }

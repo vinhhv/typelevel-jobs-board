@@ -150,7 +150,7 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
       filter.countries.toNel.map(countries => Fragments.in(fr"country", countries)),
       filter.seniorities.toNel.map(seniorities => Fragments.in(fr"country", seniorities)),
       filter.tags.toNel.map(tags => // intersection between filter.tags and row's tags
-        Fragments.or(tags.toList.map(tag => fr"$tag=any(tags"): _*)
+        Fragments.or(tags.toList.map(tag => fr"$tag=any(tags)"): _*)
       ),
       filter.maxSalary.map(salary => fr"salaryHi > $salary"),
       filter.remote.some.map(remote => fr"remote = $remote")
