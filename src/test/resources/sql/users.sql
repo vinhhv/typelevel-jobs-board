@@ -19,7 +19,7 @@ INSERT INTO users (
   role
 ) VALUES (
   'vinh@rockthejvm.com',
-  'rockthejvm',
+  '$2a$10$q1knuC.xPbjT6w/XuBHei.S3WJxS3zF3FE89Ha2xVbb1YY.kkkKb.',
   'vinh',
   'vu',
   'Rock the JVM',
@@ -35,7 +35,7 @@ INSERT INTO users (
   role
 ) VALUES (
   'joe@rockthejvm.com',
-  'rockthejvm',
+  '$2a$10$q1knuC.xPbjT6w/XuBHei.S3WJxS3zF3FE89Ha2xVbb1YY.kkkKb.',
   'joe',
   'schmoe',
   'Rock the JVM',
