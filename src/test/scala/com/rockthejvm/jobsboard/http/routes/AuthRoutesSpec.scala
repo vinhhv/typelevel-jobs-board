@@ -51,11 +51,22 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
 
   val mockedAuth: Auth[IO] = new Auth[IO] {
     // TODO: Make sure only Vinh already exists
-    def login(email: String, password: String): IO[Option[JwtToken]] = ???
+    def login(email: String, password: String): IO[Option[JwtToken]] =
+      if (email == vinhEmail && password == vinhPassword)
+        mockedAuthenticator.create(vinhEmail).map(Some(_))
+      else IO.pure(None)
 
-    def signUp(newUserInfo: NewUserInfo): IO[Option[User]] = ???
+    def signUp(newUserInfo: NewUserInfo): IO[Option[User]] =
+      if (newUserInfo.email == joeEmail) IO.pure(Some(Joe))
+      else IO.pure(None)
 
-    def changePassword(email: String, newPasswordInfo: NewPasswordInfo): IO[Either[String, Option[User]]] = ???
+    def changePassword(email: String, newPasswordInfo: NewPasswordInfo): IO[Either[String, Option[User]]] =
+      if (email == vinhEmail)
+        if (newPasswordInfo.oldPassword == vinhPassword) IO.pure(Right(Some(Vinh)))
+        else IO.pure(Left("Invalid password"))
+      else IO.pure(Right(None))
+
+    override def authenticator: Authenticator[IO] = mockedAuthenticator
   }
 
   extension (r: Request[IO])
@@ -92,7 +103,7 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
             .withEntity(LoginInfo(vinhEmail, vinhPassword))
         )
       } yield {
-        response.status shouldBe Status.Unauthorized
+        response.status shouldBe Status.Ok
         response.headers.get(ci"Authorization") shouldBe defined
       }
     }
