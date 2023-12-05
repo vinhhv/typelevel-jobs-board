@@ -14,41 +14,20 @@ import org.http4s.*
 import org.http4s.Uri.*
 import org.http4s.circe.CirceEntityCodec.*
 import org.http4s.dsl.*
-import org.http4s.headers.Authorization
 import org.http4s.implicits.*
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.typelevel.ci.CIStringSyntax
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import tsec.authentication.{IdentityStore, JWTAuthenticator}
-import tsec.jws.mac.JWTMac
-import tsec.mac.jca.HMACSHA256
 
 import scala.concurrent.duration.*
 
-class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with UserFixture {
+class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with SecuredRouteFixture {
 
   //////////////////////////////////////////////////////////////////////////////////////////////
   /// prep
   //////////////////////////////////////////////////////////////////////////////////////////////
-  val mockedAuthenticator: Authenticator[IO] = {
-    // key for hashing
-    val key = HMACSHA256.unsafeGenerateKey
-    // identity store for retrieve users
-    val idStore: IdentityStore[IO, String, User] = (email: String) =>
-      if (email == vinhEmail) OptionT.pure(Vinh)
-      else if (email == joeEmail) OptionT.pure(Joe)
-      else OptionT.none[IO, User]
-    // jwt authenticator
-    JWTAuthenticator.unbacked.inBearerToken(
-      1.day,   // expiration of tokens
-      None,    // max idle time (optional)
-      idStore, // identity store
-      key      // hash key
-    )
-  }
-
   val mockedAuth: Auth[IO] = new Auth[IO] {
     // TODO: Make sure only Vinh already exists
     override def login(email: String, password: String): IO[Option[JwtToken]] =
@@ -70,14 +49,6 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
 
     override def authenticator: Authenticator[IO] = mockedAuthenticator
   }
-
-  extension (r: Request[IO])
-    def withBearerToken(jwtToken: JwtToken): Request[IO] =
-      r.putHeaders {
-        val jwtString = JWTMac.toEncodedString[IO, HMACSHA256](jwtToken.jwt)
-        // Authorization: Bearer {jwt}
-        Authorization(Credentials.Token(AuthScheme.Bearer, jwtString))
-      }
 
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
 

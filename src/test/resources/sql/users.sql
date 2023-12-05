@@ -20,8 +20,8 @@ INSERT INTO users (
 ) VALUES (
   'vinh@rockthejvm.com',
   '$2a$10$q1knuC.xPbjT6w/XuBHei.S3WJxS3zF3FE89Ha2xVbb1YY.kkkKb.',
-  'vinh',
-  'vu',
+  'Vinh',
+  'Vu',
   'Rock the JVM',
   'ADMIN'
 );
@@ -36,8 +36,8 @@ INSERT INTO users (
 ) VALUES (
   'joe@rockthejvm.com',
   '$2a$10$q1knuC.xPbjT6w/XuBHei.S3WJxS3zF3FE89Ha2xVbb1YY.kkkKb.',
-  'joe',
-  'schmoe',
+  'Joe',
+  'Schmoe',
   'Rock the JVM',
   'RECRUITER'
 );

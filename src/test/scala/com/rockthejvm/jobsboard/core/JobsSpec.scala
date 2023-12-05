@@ -57,7 +57,7 @@ class JobsSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with DoobieS
     transactor.use { xa =>
       val program = for {
         jobs     <- LiveJobs[IO](xa)
-        jobId    <- jobs.create("daniel@rockthejvm.com", RockTheJvmNewJob)
+        jobId    <- jobs.create("vinh@rockthejvm.com", RockTheJvmNewJob)
         maybeJob <- jobs.find(jobId)
       } yield maybeJob
 

@@ -38,7 +38,7 @@ object Https4s extends IOApp.Simple {
       "a501041f-0ee4-4520-bbf2-43ad8f294cd3",
       "Rock the JVM Ultimate Scala course",
       2022,
-      List("Daniel", "Master Yoda"),
+      List("Vinh", "Master Yoda"),
       "Martin Odersky"
     )
 

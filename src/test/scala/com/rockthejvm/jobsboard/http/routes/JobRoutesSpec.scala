@@ -6,6 +6,7 @@ import cats.implicits.*
 import com.rockthejvm.jobsboard.core.*
 import com.rockthejvm.jobsboard.domain.job.*
 import com.rockthejvm.jobsboard.domain.pagination.Pagination
+import com.rockthejvm.jobsboard.domain.security.*
 import com.rockthejvm.jobsboard.fixtures.*
 import io.circe.generic.auto.*
 import org.http4s.*
@@ -20,7 +21,13 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import java.util.UUID
 
-class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Http4sDsl[IO] with JobFixture {
+class JobRoutesSpec
+    extends AsyncFreeSpec
+    with AsyncIOSpec
+    with Matchers
+    with Http4sDsl[IO]
+    with JobFixture
+    with SecuredRouteFixture {
   //////////////////////////////////////////////////////////////////////////////////////////////
   /// prep
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +57,7 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
   // this is what we are testing
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs).routes
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs, mockedAuthenticator).routes
 
   //////////////////////////////////////////////////////////////////////////////////////////////
   /// tests
@@ -99,9 +106,11 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
 
     "should create a new job" in {
       for {
+        jwtToken <- mockedAuthenticator.create(vinhEmail)
         response <- jobRoutes.orNotFound.run(
-          Request(method = Method.POST, uri = uri"/jobs/create")
+          Request[IO](method = Method.POST, uri = uri"/jobs/create")
             .withEntity(AwesomeJob.jobInfo)
+            .withBearerToken(jwtToken)
         )
         retrieved <- response.as[UUID]
       } yield {
@@ -115,17 +124,36 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
       val uriWithId        = uri / AwesomeJobUuid.toString
       val uriWithInvalidId = uri / NotFoundJobUuid.toString
       for {
+        jwtToken <- mockedAuthenticator.create(vinhEmail)
         responseOk <- jobRoutes.orNotFound.run(
-          Request(method = Method.PUT, uri = uriWithId)
+          Request[IO](method = Method.PUT, uri = uriWithId)
             .withEntity(UpdatedAwesomeJob.jobInfo)
+            .withBearerToken(jwtToken)
         )
         responseInvalid <- jobRoutes.orNotFound.run(
-          Request(method = Method.PUT, uri = uriWithInvalidId)
+          Request[IO](method = Method.PUT, uri = uriWithInvalidId)
             .withEntity(UpdatedAwesomeJob.jobInfo)
+            .withBearerToken(jwtToken)
         )
       } yield {
         responseOk.status shouldBe Status.Ok
         responseInvalid.status shouldBe Status.NotFound
+      }
+    }
+
+    "should forbid the update of a job that the JWT token doesn't 'owns'" in {
+      val uri              = uri"/jobs"
+      val uriWithId        = uri / AwesomeJobUuid.toString
+      val uriWithInvalidId = uri / NotFoundJobUuid.toString
+      for {
+        jwtToken <- mockedAuthenticator.create("somebody@gmail.com")
+        responseOk <- jobRoutes.orNotFound.run(
+          Request[IO](method = Method.PUT, uri = uriWithId)
+            .withEntity(UpdatedAwesomeJob.jobInfo)
+            .withBearerToken(jwtToken)
+        )
+      } yield {
+        responseOk.status shouldBe Status.Unauthorized
       }
     }
 
@@ -134,11 +162,14 @@ class JobRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with Ht
       val uriWithId        = uri / AwesomeJobUuid.toString
       val uriWithInvalidId = uri / NotFoundJobUuid.toString
       for {
+        jwtToken <- mockedAuthenticator.create(vinhEmail)
         responseOk <- jobRoutes.orNotFound.run(
-          Request(method = Method.DELETE, uri = uriWithId)
+          Request[IO](method = Method.DELETE, uri = uriWithId)
+            .withBearerToken(jwtToken)
         )
         responseInvalid <- jobRoutes.orNotFound.run(
-          Request(method = Method.DELETE, uri = uriWithInvalidId)
+          Request[IO](method = Method.DELETE, uri = uriWithInvalidId)
+            .withBearerToken(jwtToken)
         )
       } yield {
         responseOk.status shouldBe Status.Ok

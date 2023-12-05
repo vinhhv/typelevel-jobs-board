@@ -82,9 +82,9 @@ object Doobie extends IOApp.Simple {
   val smallProgram = postgresResource.use { xa =>
     val studentsRepo = Students.make[IO](xa)
     for {
-      id     <- studentsRepo.create("Daniel")
-      daniel <- studentsRepo.findById(id)
-      _      <- IO.println(s"The first student of Rock the JVM is $daniel")
+      id     <- studentsRepo.create("Vinh")
+      vinh <- studentsRepo.findById(id)
+      _      <- IO.println(s"The first student of Rock the JVM is $vinh")
     } yield ()
   }
 

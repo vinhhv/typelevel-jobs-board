@@ -6,21 +6,20 @@ import com.rockthejvm.jobsboard.core.*
 import com.rockthejvm.jobsboard.domain.auth.*
 import com.rockthejvm.jobsboard.domain.security.*
 import com.rockthejvm.jobsboard.domain.user.*
-import com.rockthejvm.jobsboard.http.validation.syntax.*
 import com.rockthejvm.jobsboard.http.responses.*
+import com.rockthejvm.jobsboard.http.validation.syntax.*
 import io.circe.generic.auto.*
 import org.http4s.*
 import org.http4s.circe.CirceEntityCodec.*
-import org.http4s.HttpRoutes
 import org.http4s.server.Router
 import org.typelevel.log4cats.Logger
-import tsec.authentication.{asAuthed, SecuredRequestHandler, TSecAuthService}
+import tsec.authentication.{asAuthed, SecuredRequestHandler}
 
 import scala.language.implicitConversions
 class AuthRoutes[F[_]: Concurrent: Logger] private (auth: Auth[F]) extends HttpValidationDsl[F] {
 
-  private val authenticator                                                    = auth.authenticator
-  private val securedHandler: SecuredRequestHandler[F, String, User, JwtToken] = SecuredRequestHandler(authenticator)
+  private val authenticator                     = auth.authenticator
+  private val securedHandler: SecuredHandler[F] = SecuredRequestHandler(authenticator)
 
   // POST /auth/login { LoginInfo } => 200 OK with Authorization: Bearer {jwt}
   private val loginRoute: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "login" =>
