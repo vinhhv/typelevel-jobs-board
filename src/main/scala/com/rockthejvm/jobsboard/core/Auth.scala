@@ -127,9 +127,9 @@ object LiveAuth {
       tokenStore <- tokenStoreF
       // 4. jwt authenticator
       authenticator = JWTAuthenticator.backed.inBearerToken(
-        expiryDuration = securityConfig.jwtExpiryDuration,  // expiration of tokens
-        maxIdle = None,          // max idle time (optional)
-        identityStore = idStore, // identity store
+        expiryDuration = securityConfig.jwtExpiryDuration, // expiration of tokens
+        maxIdle = None,                                    // max idle time (optional)
+        identityStore = idStore,                           // identity store
         tokenStore = tokenStore,
         signingKey = key // hash key
       )
