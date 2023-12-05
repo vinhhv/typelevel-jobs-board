@@ -1,34 +1,25 @@
 package com.rockthejvm.jobsboard.core
 
-import cats.data.OptionT
 import cats.effect.*
 import cats.implicits.*
-import com.rockthejvm.jobsboard.config.SecurityConfig
 import com.rockthejvm.jobsboard.domain.auth.*
-import com.rockthejvm.jobsboard.domain.security.*
 import com.rockthejvm.jobsboard.domain.user.*
 import org.typelevel.log4cats.Logger
-import tsec.authentication.{BackingStore, IdentityStore, JWTAuthenticator}
-import tsec.common.SecureRandomId
-import tsec.mac.jca.HMACSHA256
 import tsec.passwordhashers.PasswordHash
 import tsec.passwordhashers.jca.BCrypt
 
 import scala.concurrent.duration.*
 
 trait Auth[F[_]] {
-  def login(email: String, password: String): F[Option[JwtToken]]
+  def login(email: String, password: String): F[Option[User]]
   def signUp(newUserInfo: NewUserInfo): F[Option[User]]
   def changePassword(email: String, newPasswordInfo: NewPasswordInfo): F[Either[String, Option[User]]]
   // TODO: password recovery via email
   def delete(email: String): F[Boolean]
-
-  def authenticator: Authenticator[F]
 }
 
-class LiveAuth[F[_]: Async: Logger] private (users: Users[F], override val authenticator: Authenticator[F])
-    extends Auth[F] {
-  override def login(email: String, password: String): F[Option[JwtToken]] =
+class LiveAuth[F[_]: Async: Logger] private (users: Users[F]) extends Auth[F] {
+  override def login(email: String, password: String): F[Option[User]] =
     for {
       // find the user in the DB -> return None if no user
       maybeUser <- users.find(email)
@@ -40,10 +31,7 @@ class LiveAuth[F[_]: Async: Logger] private (users: Users[F], override val authe
           PasswordHash[BCrypt](user.hashedPassword)
         )
       }
-      // return a new token if password matches
-      maybeJwtToken <- maybeValidatedUser.traverse(user => authenticator.create(user.email))
-      //               Option[User].map(User => F[JWTToken]) => Option[F[JWTToken]]
-    } yield maybeJwtToken
+    } yield maybeValidatedUser
   override def signUp(newUserInfo: NewUserInfo): F[Option[User]] =
     // find the user in the db, if we did => None
     users.find(newUserInfo.email).flatMap {
@@ -96,44 +84,6 @@ class LiveAuth[F[_]: Async: Logger] private (users: Users[F], override val authe
 }
 
 object LiveAuth {
-  def apply[F[_]: Async: Logger](users: Users[F])(securityConfig: SecurityConfig): F[LiveAuth[F]] = {
-    // 1. identity store for retrieve users: String => OptionT[F, User]
-    val idStore: IdentityStore[F, String, User] = (email: String) => OptionT(users.find(email))
-
-    // 2. backing store for JWT tokens: BackingStore[F, id, JwtToken
-    val tokenStoreF = Ref.of[F, Map[SecureRandomId, JwtToken]](Map.empty).map { ref =>
-      new BackingStore[F, SecureRandomId, JwtToken] {
-        // mutable map - race conditions
-        // ref - atomic thread-safe
-        override def get(id: SecureRandomId): OptionT[F, JwtToken] =
-          OptionT(ref.get.map(_.get(id)))
-
-        override def put(elem: JwtToken): F[JwtToken] =
-          ref.modify(store => (store + (elem.id -> elem), elem))
-
-        override def update(v: JwtToken): F[JwtToken] =
-          put(v)
-
-        override def delete(id: SecureRandomId): F[Unit] =
-          ref.modify(store => (store - id, ()))
-      }
-    }
-
-    // 3. hashing key
-    val keyF = HMACSHA256.buildKey[F](securityConfig.secret.getBytes("UTF-8")) // TODO: move to config
-
-    for {
-      key        <- keyF
-      tokenStore <- tokenStoreF
-      // 4. jwt authenticator
-      authenticator = JWTAuthenticator.backed.inBearerToken(
-        expiryDuration = securityConfig.jwtExpiryDuration, // expiration of tokens
-        maxIdle = None,                                    // max idle time (optional)
-        identityStore = idStore,                           // identity store
-        tokenStore = tokenStore,
-        signingKey = key // hash key
-      )
-      // 5. live auth
-    } yield new LiveAuth[F](users, authenticator)
-  }
+  def apply[F[_]: Async: Logger](users: Users[F]): F[LiveAuth[F]] =
+    new LiveAuth[F](users).pure[F]
 }
