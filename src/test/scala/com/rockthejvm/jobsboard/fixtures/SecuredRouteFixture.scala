@@ -6,7 +6,7 @@ import com.rockthejvm.jobsboard.domain.security.*
 import com.rockthejvm.jobsboard.domain.user.*
 import org.http4s.*
 import org.http4s.headers.Authorization
-import tsec.authentication.{IdentityStore, JWTAuthenticator}
+import tsec.authentication.{IdentityStore, JWTAuthenticator, SecuredRequestHandler}
 import tsec.jws.mac.JWTMac
 import tsec.mac.jca.HMACSHA256
 
@@ -37,4 +37,6 @@ trait SecuredRouteFixture extends UserFixture {
         // Authorization: Bearer {jwt}
         Authorization(Credentials.Token(AuthScheme.Bearer, jwtString))
       }
+
+  given securedHandler: SecuredHandler[IO] = SecuredRequestHandler(mockedAuthenticator)
 }
