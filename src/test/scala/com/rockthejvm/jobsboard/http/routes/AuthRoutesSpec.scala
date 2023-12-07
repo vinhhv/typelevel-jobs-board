@@ -44,7 +44,11 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
         else IO.pure(Left("Invalid password"))
       else IO.pure(Right(None))
 
-    override def delete(email: Fragment): IO[Boolean] = IO.pure(true)
+    override def delete(email: String): IO[Boolean] = IO.pure(true)
+
+    override def sendPasswordRecoveryToken(email: String): IO[Unit] = ???
+
+    override def recoverPasswordFromToken(email: String, token: String, newPassword: String): IO[Boolean] = ???
   }
 
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]

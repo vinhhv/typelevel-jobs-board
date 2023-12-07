@@ -8,12 +8,12 @@ import java.util.Properties
 import javax.mail.internet.MimeMessage
 import javax.mail.{Authenticator, Message, PasswordAuthentication, Session, Transport}
 
-trait Email[F[_]] {
+trait Emails[F[_]] {
   def sendEmail(to: String, subject: String, content: String): F[Unit]
   def sendPasswordRecoveryEmail(to: String, token: String): F[Unit]
 }
 
-class LiveEmails[F[_]: MonadCancelThrow] private (emailServiceConfig: EmailServiceConfig) extends Email[F] {
+class LiveEmails[F[_]: MonadCancelThrow] private (emailServiceConfig: EmailServiceConfig) extends Emails[F] {
   val host        = emailServiceConfig.host
   val port        = emailServiceConfig.port
   val user        = emailServiceConfig.user
