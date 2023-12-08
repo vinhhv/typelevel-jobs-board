@@ -66,12 +66,20 @@ class AuthRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (
 
   // POST /auth/reset { ForgotPasswordInfo }
   private val forgotPasswordRoute: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "reset" =>
-    Ok("TODO")
+    for {
+      fpInfo <- req.as[ForgotPasswordInfo]
+      _      <- auth.sendPasswordRecoveryToken(fpInfo.email)
+      resp   <- Ok()
+    } yield resp
   }
 
   // POST /auth/recover { RecoverPasswordInfo }
   private val recoverPasswordRoute: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "recover" =>
-    Ok("TODO")
+    for {
+      rpInfo             <- req.as[RecoverPasswordInfo]
+      recoverySuccessful <- auth.recoverPasswordFromToken(rpInfo.email, rpInfo.token, rpInfo.newPassword)
+      resp <- if (recoverySuccessful) Ok() else Forbidden(FailureResponse("Email/token combination is incorrect."))
+    } yield resp
   }
 
   // POST /auth/logout { Authorization: Bearer {jwt} } => 200 OK
@@ -92,7 +100,7 @@ class AuthRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (
     }
   }
 
-  val unauthedRoutes = loginRoute <+> createUserRoute
+  val unauthedRoutes = loginRoute <+> createUserRoute <+> forgotPasswordRoute <+> recoverPasswordRoute
   val authedRoutes = SecuredHandler[F].liftService(
     changePasswordRoute.restrictedTo(allRoles) |+|
       logoutRoute.restrictedTo(allRoles) |+|

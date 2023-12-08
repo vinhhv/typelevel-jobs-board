@@ -28,8 +28,11 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
   //////////////////////////////////////////////////////////////////////////////////////////////
   /// prep
   //////////////////////////////////////////////////////////////////////////////////////////////
-  val mockedAuth: Auth[IO] = new Auth[IO] {
-    // TODO: Make sure only Vinh already exists
+  val mockedAuth: Auth[IO] = probedAuth(None)
+
+  val defaultToken = "abc123"
+
+  def probedAuth(userMap: Option[Ref[IO, Map[String, String]]]): Auth[IO] = new Auth[IO] {
     override def login(email: String, password: String): IO[Option[User]] =
       if (email == vinhEmail && password == vinhPassword) IO.pure(Some(Vinh))
       else IO.pure(None)
@@ -46,9 +49,25 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
 
     override def delete(email: String): IO[Boolean] = IO.pure(true)
 
-    override def sendPasswordRecoveryToken(email: String): IO[Unit] = ???
+    override def sendPasswordRecoveryToken(email: String): IO[Unit] =
+      userMap
+        .traverse { userMapRef =>
+          userMapRef.modify { userMap =>
+            (userMap + (email -> defaultToken), ())
+          }
+        }
+        .map(_ => ())
 
-    override def recoverPasswordFromToken(email: String, token: String, newPassword: String): IO[Boolean] = ???
+    override def recoverPasswordFromToken(email: String, token: String, newPassword: String): IO[Boolean] =
+      userMap
+        .traverse { userMapRef =>
+          userMapRef.get
+            .map { userMap =>
+              userMap.get(email).filter(_ == token) // Option[String]
+            }                                       // IO[Option[String]]
+            .map(_.nonEmpty)
+        }
+        .map(_.getOrElse(false))
   }
 
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
@@ -199,6 +218,52 @@ class AuthRoutesSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with H
         )
       } yield {
         response.status shouldBe Status.Ok
+      }
+    }
+
+    "should return a 200 - Ok when resetting a password, and an email should be triggered" in {
+      for {
+        userMapRef <- Ref.of[IO, Map[String, String]](Map())
+        auth       <- IO(probedAuth(Some(userMapRef)))
+        routes     <- IO(AuthRoutes(auth, mockedAuthenticator).routes)
+        response <- routes.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/auth/reset")
+            .withEntity(ForgotPasswordInfo(vinhEmail))
+        )
+        userMap <- userMapRef.get
+      } yield {
+        response.status shouldBe Status.Ok
+        userMap should contain key (vinhEmail)
+      }
+    }
+
+    "should return a 200 - Ok when recovering a password for a correct user/token combination" in {
+      for {
+        userMapRef <- Ref.of[IO, Map[String, String]](Map(vinhEmail -> defaultToken))
+        auth       <- IO(probedAuth(Some(userMapRef)))
+        routes     <- IO(AuthRoutes(auth, mockedAuthenticator).routes)
+        response <- routes.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/auth/recover")
+            .withEntity(RecoverPasswordInfo(vinhEmail, defaultToken, "rockthejvm"))
+        )
+        userMap <- userMapRef.get
+      } yield {
+        response.status shouldBe Status.Ok
+      }
+    }
+
+    "should return a 403 - Forbidden when recovering a password for an incorrect user/token combination" in {
+      for {
+        userMapRef <- Ref.of[IO, Map[String, String]](Map(vinhEmail -> defaultToken))
+        auth       <- IO(probedAuth(Some(userMapRef)))
+        routes     <- IO(AuthRoutes(auth, mockedAuthenticator).routes)
+        response <- routes.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/auth/recover")
+            .withEntity(RecoverPasswordInfo(vinhEmail, "wrongtoken", "rockthejvm"))
+        )
+        userMap <- userMapRef.get
+      } yield {
+        response.status shouldBe Status.Forbidden
       }
     }
 
