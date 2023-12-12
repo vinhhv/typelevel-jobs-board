@@ -9,15 +9,14 @@ import tyrian.cmds.Logger
 
 import scala.concurrent.duration.*
 
-object App {
+object PlaygroundApp {
   sealed trait Msg
   case class Increment(amount: Int) extends Msg
   case class Model(count: Int)
 }
 
-@JSExportTopLevel("RockTheJvmApp")
-class App extends TyrianApp[App.Msg, App.Model] {
-  import App.*
+class PlaygroundApp extends TyrianApp[PlaygroundApp.Msg, PlaygroundApp.Model] {
+  import PlaygroundApp.*
   /*
    We can send message by
    - trigger a command
