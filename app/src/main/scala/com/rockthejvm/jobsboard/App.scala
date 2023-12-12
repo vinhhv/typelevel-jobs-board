@@ -7,6 +7,7 @@ import tyrian.*
 import tyrian.Html.*
 import tyrian.cmds.Logger
 
+import components.*
 import core.*
 
 import scala.concurrent.duration.*
@@ -51,22 +52,8 @@ class App extends TyrianApp[App.Msg, App.Model] {
   // view triggered whenever model changes
   def view(model: Model): Html[Msg] =
     div(
-      renderNavLink("Jobs", "/jobs"),
-      renderNavLink("Login", "/login"),
-      renderNavLink("Sign Up", "/signup"),
+      Header.view(),
       div(s"You are now at: ${model.router.location}")
     )
 
-  private def renderNavLink(text: String, location: String) =
-    a(
-      href    := location,
-      `class` := "nav-link",
-      onEvent(
-        "click",
-        e => {
-          e.preventDefault() // native JS - prevent reloading the page
-          Router.ChangeLocation(location)
-        }
-      )
-    )(text)
 }
