@@ -1,7 +1,7 @@
 package com.rockthejvm.jobsboard
 
 import cats.effect.IO
-import org.scalajs.dom.{console, document, window}
+import org.scalajs.dom.window
 import scala.scalajs.js.annotation.*
 import tyrian.*
 import tyrian.Html.*
@@ -9,13 +9,14 @@ import tyrian.cmds.Logger
 
 import components.*
 import core.*
+import pages.*
 
 import scala.concurrent.duration.*
 
 object App {
-  type Msg = Router.Msg
-  case class Increment(amount: Int) extends Msg
-  case class Model(router: Router)
+  type Msg = Router.Msg | Page.Msg
+
+  case class Model(router: Router, page: Page)
 }
 
 @JSExportTopLevel("RockTheJvmApp")
@@ -28,8 +29,11 @@ class App extends TyrianApp[App.Msg, App.Model] {
    - listening for an event
    */
   def init(flags: Map[String, String]): (Model, Cmd[IO, Msg]) = {
-    val (router, cmd) = Router.startAt(window.location.pathname)
-    (Model(router), cmd)
+    val location            = window.location.pathname
+    val page                = Page.get(location)
+    val pageCmd             = page.initCmd
+    val (router, routerCmd) = Router.startAt(location)
+    (Model(router, page), routerCmd |+| pageCmd)
   }
 
   // potentially endless stream of messages
@@ -44,16 +48,27 @@ class App extends TyrianApp[App.Msg, App.Model] {
   // model can change by receiving messages
   // model => message => (new model, new command)
   // update triggered whenever we get a new message
-  def update(model: Model): Msg => (Model, Cmd[IO, Msg]) = { case msg: Router.Msg =>
-    val (newRouter, cmd) = model.router.update(msg)
-    (model.copy(router = newRouter), cmd)
+  def update(model: Model): Msg => (Model, Cmd[IO, Msg]) = {
+    case msg: Router.Msg =>
+      val (newRouter, routerCmd) = model.router.update(msg)
+      if (model.router == newRouter) // no change is necessary
+        (model, Cmd.None)
+      else {
+        // location changed, need to re-render the appropriate page
+        val newPage    = Page.get(newRouter.location)
+        val newPageCmd = newPage.initCmd
+        (model.copy(router = newRouter, page = newPage), routerCmd |+| newPageCmd)
+      }
+    case msg: Page.Msg =>
+      val (newPage, cmd) = model.page.update(msg)
+      (model.copy(page = newPage), cmd)
   }
 
   // view triggered whenever model changes
   def view(model: Model): Html[Msg] =
     div(
       Header.view(),
-      div(s"You are now at: ${model.router.location}")
+      model.page.view()
     )
 
 }

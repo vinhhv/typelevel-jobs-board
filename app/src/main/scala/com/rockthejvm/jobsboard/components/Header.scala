@@ -7,6 +7,7 @@ import tyrian.Html.*
 
 import com.rockthejvm.jobsboard.core.*
 import com.rockthejvm.jobsboard.core.Router.ChangeLocation
+import com.rockthejvm.jobsboard.pages.*
 
 object Header {
   // public API
@@ -15,9 +16,9 @@ object Header {
       renderLogo(),
       div(`class` := "header-nav")(
         ul(`class` := "header-links")(
-          renderNavLink("Jobs", "/jobs"),
-          renderNavLink("Login", "/login"),
-          renderNavLink("Sign Up", "/signup")
+          renderNavLink("Jobs", Page.Urls.JOBS),
+          renderNavLink("Login", Page.Urls.LOGIN),
+          renderNavLink("Sign Up", Page.Urls.SIGNUP)
         )
       )
     )

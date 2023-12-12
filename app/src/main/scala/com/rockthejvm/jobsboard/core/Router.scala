@@ -4,7 +4,6 @@ import cats.effect.IO
 import fs2.dom.History
 import tyrian.*
 
-// jobs.rockthejvm.com/login
 case class Router private (location: String, history: History[IO, String]) {
   import Router.*
 
