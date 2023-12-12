@@ -24,8 +24,7 @@ import java.util.UUID
 import scala.collection.mutable
 import scala.language.implicitConversions
 
-class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F])
-    extends HttpValidationDsl[F] {
+class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]) extends HttpValidationDsl[F] {
 
   object LimitQueryParam  extends OptionalQueryParamDecoderMatcher[Int]("limit")
   object OffsetQueryParam extends OptionalQueryParamDecoderMatcher[Int]("offset")

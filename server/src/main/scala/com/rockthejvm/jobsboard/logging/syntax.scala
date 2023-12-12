@@ -12,7 +12,7 @@ object syntax {
     }
 
     def logError(error: E => String): F[A] = fa.attemptTap {
-      case Left(e) => logger.error(error(e))
+      case Left(e)  => logger.error(error(e))
       case Right(_) => ().pure[F]
     }
 }

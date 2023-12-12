@@ -2,19 +2,7 @@ package com.rockthejvm.foundations
 
 import cats.{Defer, MonadError}
 import cats.effect.kernel.Deferred
-import cats.effect.{
-  Concurrent,
-  Fiber,
-  GenSpawn,
-  IO,
-  IOApp,
-  MonadCancel,
-  Ref,
-  Resource,
-  Spawn,
-  Sync,
-  Temporal
-}
+import cats.effect.{Concurrent, Fiber, GenSpawn, IO, IOApp, MonadCancel, Ref, Resource, Spawn, Sync, Temporal}
 
 import java.io.{File, FileWriter, PrintWriter}
 import scala.concurrent.ExecutionContext

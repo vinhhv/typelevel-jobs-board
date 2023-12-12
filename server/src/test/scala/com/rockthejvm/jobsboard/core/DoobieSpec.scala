@@ -8,10 +8,10 @@ import doobie.util.*
 import org.testcontainers.containers.PostgreSQLContainer
 
 trait DoobieSpec {
-  
+
   // to be implemented by whatever test case interacts with the DB
   val initScript: String
-  
+
   val postgres: Resource[IO, PostgreSQLContainer[Nothing]] = {
     val acquire = IO {
       val container: PostgreSQLContainer[Nothing] =

@@ -155,3 +155,4 @@ project/plugins/project/
 .bloop/
 project/.bloop/
 project/metals.sbt
+project/project/

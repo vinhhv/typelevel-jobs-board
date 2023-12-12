@@ -7,10 +7,7 @@ import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.http4s.circe.*
 import org.http4s.dsl.Http4sDsl
-import org.http4s.dsl.impl.{
-  OptionalValidatingQueryParamDecoderMatcher,
-  QueryParamDecoderMatcher
-}
+import org.http4s.dsl.impl.{OptionalValidatingQueryParamDecoderMatcher, QueryParamDecoderMatcher}
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.headers.*
 import org.http4s.server.Router
@@ -57,11 +54,9 @@ object Https4s extends IOApp.Simple {
   // GET localhost:8080/courses?instructor=Martin%20Odersky&year=2022
   // GET localhost:8080/courses/a501041f-0ee4-4520-bbf2-43ad8f294cd3/students
 
-  object InstructorQueryParamMatcher
-      extends QueryParamDecoderMatcher[String]("instructor")
+  object InstructorQueryParamMatcher extends QueryParamDecoderMatcher[String]("instructor")
 
-  object YearQueryParamMatcher
-      extends OptionalValidatingQueryParamDecoderMatcher[Int]("year")
+  object YearQueryParamMatcher extends OptionalValidatingQueryParamDecoderMatcher[Int]("year")
 
   def courseRoutes[F[_]: Monad]: HttpRoutes[F] = {
     val dsl = Http4sDsl[F]
