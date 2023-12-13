@@ -2,6 +2,7 @@ package com.rockthejvm.jobsboard.fixtures
 
 import cats.effect.IO
 import com.rockthejvm.jobsboard.core.Users
+import com.rockthejvm.jobsboard.domain.auth.*
 import com.rockthejvm.jobsboard.domain.user.*
 
 trait UserFixture {
