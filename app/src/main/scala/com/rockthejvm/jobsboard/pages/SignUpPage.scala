@@ -80,7 +80,7 @@ final case class SignUpPage(
       ),
       // form
       form(
-        name    := "signin",
+        name    := "signup",
         `class` := "form",
         onEvent(
           "submit",
