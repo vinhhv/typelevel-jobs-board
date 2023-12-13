@@ -4,6 +4,8 @@ import cats.effect.IO
 import fs2.dom.History
 import tyrian.*
 
+import com.rockthejvm.jobsboard.*
+
 case class Router private (location: String, history: History[IO, String]) {
   import Router.*
 
@@ -26,7 +28,7 @@ case class Router private (location: String, history: History[IO, String]) {
 }
 
 object Router {
-  trait Msg
+  trait Msg                                                                         extends App.Msg
   case class ChangeLocation(newLocation: String, browserTriggered: Boolean = false) extends Msg
   case class ExternalRedirect(location: String)                                     extends Msg
 

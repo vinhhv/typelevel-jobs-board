@@ -14,9 +14,9 @@ import pages.*
 import scala.concurrent.duration.*
 
 object App {
-  type Msg = Router.Msg | Page.Msg
+  trait Msg
 
-  case class Model(router: Router, page: Page)
+  case class Model(router: Router, session: Session, page: Page)
 }
 
 @JSExportTopLevel("RockTheJvmApp")
@@ -33,7 +33,9 @@ class App extends TyrianApp[App.Msg, App.Model] {
     val page                = Page.get(location)
     val pageCmd             = page.initCmd
     val (router, routerCmd) = Router.startAt(location)
-    (Model(router, page), routerCmd |+| pageCmd)
+    val session             = Session()
+    val sessionCmd          = session.initCmd
+    (Model(router, session, page), routerCmd |+| sessionCmd |+| pageCmd)
   }
 
   // potentially endless stream of messages
@@ -59,7 +61,10 @@ class App extends TyrianApp[App.Msg, App.Model] {
         val newPageCmd = newPage.initCmd
         (model.copy(router = newRouter, page = newPage), routerCmd |+| newPageCmd)
       }
-    case msg: Page.Msg =>
+    case msg: Session.Msg =>
+      val (newSession, newCmd) = model.session.update(msg)
+      (model.copy(session = newSession), newCmd)
+    case msg: App.Msg =>
       val (newPage, cmd) = model.page.update(msg)
       (model.copy(page = newPage), cmd)
   }

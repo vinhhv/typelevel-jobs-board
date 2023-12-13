@@ -4,15 +4,17 @@ import cats.effect.IO
 import tyrian.*
 import tyrian.Html.*
 
+import com.rockthejvm.jobsboard.*
+
 final case class RecoverPasswordPage() extends Page {
-  override def initCmd: Cmd[IO, Page.Msg] =
+  override def initCmd: Cmd[IO, App.Msg] =
     Cmd.None // TODO
 
       // update
-  override def update(msg: Page.Msg): (Page, Cmd[IO, Page.Msg]) =
+  override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) =
     (this, Cmd.None) // TODO
 
   // render
-  override def view(): Html[Page.Msg] =
+  override def view(): Html[App.Msg] =
     div("Recover password page - TODO")
 }
