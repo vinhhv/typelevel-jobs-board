@@ -11,6 +11,7 @@ import org.http4s.dsl.*
 import org.http4s.dsl.impl.*
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.*
+import org.http4s.server.middleware.CORS
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
@@ -36,7 +37,7 @@ object Application extends IOApp.Simple {
             .default[IO]
             .withHost(emberConfig.host)
             .withPort(emberConfig.port)
-            .withHttpApp(httpApi.endpoints.orNotFound)
+            .withHttpApp(CORS(httpApi.endpoints).orNotFound) // TODO: remove before deploying
             .build
         } yield server
         appResource.use(_ => IO.println("Server ready!") *> IO.never)
