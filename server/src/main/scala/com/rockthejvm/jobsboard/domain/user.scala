@@ -1,8 +1,8 @@
 package com.rockthejvm.jobsboard.domain
 
+import com.rockthejvm.jobsboard.domain.job.*
 import doobie.Meta
 import tsec.authorization.{AuthGroup, SimpleAuthEnum}
-import job.*
 
 object user {
   final case class User(
