@@ -28,15 +28,20 @@ final case class Session(email: Option[String] = None, token: Option[String] = N
       val cookieCmd = Commands.setAllSessionCookies(e, t, true)
       val routerCmd =
         if (isNewUser) Cmd.Emit(Router.ChangeLocation(Page.Urls.HOME))
-        else Cmd.None // check whether the token is still valid on the server
+        else Commands.checkToken // check whether the token is still valid on the server
       (
         this.copy(email = Some(e), token = Some(t)),
         cookieCmd |+| routerCmd
       )
+    case CheckToken =>
+      (this, Commands.checkToken)
+    case KeepToken =>
+      (this, Cmd.None)
+    // logout
     case Logout =>
       val cmd = token.map(_ => Commands.logout).getOrElse(Cmd.None)
       (this, cmd)
-    case LogoutSuccess =>
+    case LogoutSuccess | InvalidateToken =>
       (
         this.copy(email = None, token = None),
         Commands.clearAllSessionCookies() |+| Cmd.Emit(Router.ChangeLocation(Page.Urls.HOME))
@@ -47,9 +52,14 @@ final case class Session(email: Option[String] = None, token: Option[String] = N
 object Session {
   trait Msg                                                                   extends App.Msg
   final case class SetToken(email: String, token: String, isNewUser: Boolean) extends Msg
-  case object Logout                                                          extends Msg
-  case object LogoutSuccess                                                   extends Msg
-  case object LogoutFailure                                                   extends Msg
+  // check token
+  case object CheckToken      extends Msg
+  case object KeepToken       extends Msg
+  case object InvalidateToken extends Msg
+  // logout
+  case object Logout        extends Msg
+  case object LogoutSuccess extends Msg
+  case object LogoutFailure extends Msg
 
   def isActive = getUserToken().nonEmpty
 
@@ -57,15 +67,27 @@ object Session {
 
   object Endpoints {
     val logout = new Endpoint[Msg] {
-      val location                   = Constants.Endpoints.logout
-      val method                     = Method.Post
-      val onSuccess: Response => Msg = _ => LogoutSuccess
-      val onError: HttpError => Msg  = _ => LogoutFailure
+      override val location                   = Constants.endpoints.logout
+      override val method                     = Method.Post
+      override val onSuccess: Response => Msg = _ => LogoutSuccess
+      override val onError: HttpError => Msg  = _ => LogoutFailure
+    }
+
+    val checkToken = new Endpoint[Msg] {
+      override val location: String = Constants.endpoints.checkToken
+      override val method: Method   = Method.Get
+      override val onSuccess: Response => Msg = response =>
+        response.status match {
+          case Status(200, _) => KeepToken
+          case _              => InvalidateToken
+        }
+      override val onError: HttpError => Msg = _ => InvalidateToken
     }
   }
 
   object Commands {
-    def logout: Cmd[IO, Msg] = Endpoints.logout.callAuthorized()
+    def checkToken: Cmd[IO, Msg] = Endpoints.checkToken.callAuthorized()
+    def logout: Cmd[IO, Msg]     = Endpoints.logout.callAuthorized()
 
     def setSessionCookie(name: String, value: String, isFresh: Boolean = false): Cmd[IO, Msg] =
       Cmd.SideEffect[IO] {

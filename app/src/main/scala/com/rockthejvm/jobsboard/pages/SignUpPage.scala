@@ -143,7 +143,7 @@ object SignUpPage {
 
   object Endpoints {
     val signup = new Endpoint[Msg] {
-      override val location = Constants.Endpoints.signup
+      override val location = Constants.endpoints.signup
       override val method   = Method.Post
       override val onSuccess: Response => Msg = response =>
         response.status match {
