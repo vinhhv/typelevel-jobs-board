@@ -22,6 +22,7 @@ object Page {
     val HOME             = "/"
     val JOBS             = "/jobs"
     val EMPTY            = ""
+    val HASH             = "#"
   }
 
   import Urls.*
