@@ -24,13 +24,10 @@ final case class LoginPage(
     email: String = "",
     password: String = "",
     status: Option[Page.Status] = None
-) extends Page {
+) extends FormPage("Log In", status) {
   import LoginPage.*
 
-  override def initCmd: Cmd[IO, App.Msg] =
-    Cmd.None
-
-      // update
+  // update
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match {
     case UpdateEmail(e)    => (this.copy(email = e), Cmd.None)
     case UpdatePassword(p) => (this.copy(password = p), Cmd.None)
@@ -48,47 +45,16 @@ final case class LoginPage(
   }
 
   // render
-  override def view(): Html[App.Msg] =
-    div(`class` := "form-section")(
-      // title: sign up
-      div(`class` := "top-section")(
-        h1("Log in")
-      ),
-      // form
-      form(
-        name    := "login",
-        `class` := "form",
-        onEvent(
-          "submit",
-          e => {
-            e.preventDefault()
-            NoOp
-          }
-        )
-      )(
-        // 6 inputs
-        // button
-        renderInput("Email", "email", "text", true, UpdateEmail(_)),
-        renderInput("Password", "password", "password", true, UpdatePassword(_)),
-        // button
-        button(`type` := "button", onClick(AttemptLogin))("Log in")
-      ),
-      status.map(s => div(s.message)).getOrElse(div())
-    )
+  override def renderFormContent(): List[Html[App.Msg]] = List(
+    renderInput("Email", "email", "text", true, UpdateEmail(_)),
+    renderInput("Password", "password", "password", true, UpdatePassword(_)),
+    button(`type` := "button", onClick(AttemptLogin))("Log in"),
+    renderAuxLink(Page.Urls.FORGOT_PASSWORD, "Forgot Password?")
+  )
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // private
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // UI
-  private def renderInput(name: String, uid: String, kind: String, isRequired: Boolean, onChange: String => Msg) =
-    div(`class` := "form-input")(
-      label(`for` := name, `class` := "form-label")(
-        if (isRequired) span("*") else span(),
-        text(name)
-      ),
-      input(`type` := kind, `class` := "form-control", id := uid, onInput(onChange))
-    )
 
   // util
   def setErrorStatus(message: String): Page =

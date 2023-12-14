@@ -13,18 +13,6 @@ import com.rockthejvm.jobsboard.*
 import com.rockthejvm.jobsboard.common.*
 import com.rockthejvm.jobsboard.domain.auth.NewUserInfo
 
-// form
-/*
-  input
-    - email
-    - password
-    - confirm password
-    - first name
-    - last name
-    - company
-  button - trigger sign up
-
- */
 final case class SignUpPage(
     email: String = "",
     password: String = "",
@@ -33,13 +21,9 @@ final case class SignUpPage(
     lastName: String = "",
     company: String = "",
     status: Option[Page.Status] = None
-) extends Page {
+) extends FormPage("Sign Up", status) {
   import SignUpPage.*
-
-  override def initCmd: Cmd[IO, App.Msg] =
-    Cmd.None // TODO
-
-      // update
+  // update
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match {
     case UpdateEmail(e)            => (this.copy(email = e), Cmd.None)
     case UpdatePassword(p)         => (this.copy(password = p), Cmd.None)
@@ -73,51 +57,20 @@ final case class SignUpPage(
   }
 
   // render
-  override def view(): Html[App.Msg] =
-    div(`class` := "form-section")(
-      // title: sign up
-      div(`class` := "top-section")(
-        h1("Sign up")
-      ),
-      // form
-      form(
-        name    := "signup",
-        `class` := "form",
-        onEvent(
-          "submit",
-          e => {
-            e.preventDefault()
-            NoOp
-          }
-        )
-      )(
-        // 6 inputs
-        // button
-        renderInput("Email", "email", "text", true, UpdateEmail(_)),
-        renderInput("Password", "password", "password", true, UpdatePassword(_)),
-        renderInput("Confirm password", "cPassword", "password", true, UpdateConfirmPassword(_)),
-        renderInput("First name", "firstName", "text", false, UpdateFirstName(_)),
-        renderInput("Last name", "lastName", "text", false, UpdateLastName(_)),
-        renderInput("Company", "company", "text", false, UpdateCompany(_)),
-        // button
-        button(`type` := "button", onClick(AttemptSignUp))("Sign up")
-      ),
-      status.map(s => div(s.message)).getOrElse(div())
-    )
+  override def renderFormContent(): List[Html[App.Msg]] = List(
+    renderInput("Email", "email", "text", true, UpdateEmail(_)),
+    renderInput("Password", "password", "password", true, UpdatePassword(_)),
+    renderInput("Confirm password", "cPassword", "password", true, UpdateConfirmPassword(_)),
+    renderInput("First name", "firstName", "text", false, UpdateFirstName(_)),
+    renderInput("Last name", "lastName", "text", false, UpdateLastName(_)),
+    renderInput("Company", "company", "text", false, UpdateCompany(_)),
+    // button
+    button(`type` := "button", onClick(AttemptSignUp))("Sign up")
+  )
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // private
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // UI
-  private def renderInput(name: String, uid: String, kind: String, isRequired: Boolean, onChange: String => Msg) =
-    div(`class` := "form-input")(
-      label(`for` := name, `class` := "form-label")(
-        if (isRequired) span("*") else span(),
-        text(name)
-      ),
-      input(`type` := kind, `class` := "form-control", id := uid, onInput(onChange))
-    )
 
   // util
   def setErrorStatus(message: String): Page =

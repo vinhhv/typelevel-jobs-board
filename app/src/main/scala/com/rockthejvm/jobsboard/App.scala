@@ -11,10 +11,12 @@ import components.*
 import core.*
 import pages.*
 
-import scala.concurrent.duration.*
+import scala.concurrent.duration.given
 
 object App {
   trait Msg
+
+  case object NoOp extends Msg
 
   case class Model(router: Router, session: Session, page: Page)
 }
@@ -73,7 +75,9 @@ class App extends TyrianApp[App.Msg, App.Model] {
   def view(model: Model): Html[Msg] =
     div(
       Header.view(),
-      model.page.view()
+      model.page.view(),
+      if (Session.isActive) span(model.session.email.getOrElse(""))
+      else span("Unauthenticated")
     )
 
 }
