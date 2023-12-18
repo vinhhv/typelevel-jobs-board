@@ -5,6 +5,7 @@
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
+  "postCreateCommand": ".devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
       "extensions": [
