@@ -36,8 +36,10 @@ RUN echo \
 RUN sudo apt-get update
 RUN sudo apt-get install -y docker-ce-cli
 
-# Create non-root user
-RUN groupadd -r developer && useradd -r -g developer -G sudo -m -s /bin/bash developer
+# Create non-root user and add to group to connect to host Docker daemon
+RUN groupadd -r developer && useradd -r -g developer -G sudo -m -s /bin/bash developer && \
+  groupadd -g 800 docker && \
+  usermod -aG docker developer
 
 # Switch to the non-root user
 USER developer
