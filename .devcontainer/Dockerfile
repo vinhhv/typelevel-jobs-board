@@ -1,7 +1,4 @@
-FROM ubuntu:23.10
-
-# Root user
-USER 0
+FROM ubuntu:22.04
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
@@ -37,30 +34,27 @@ RUN echo \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 RUN sudo apt-get update
-RUN sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+RUN sudo apt-get install -y docker-ce-cli
+
+# Create non-root user
+RUN groupadd -r developer && useradd -r -g developer -G sudo -m -s /bin/bash developer
+
+# Switch to the non-root user
+USER developer
+ENV HOME /home/developer
+# Set the working directory
+WORKDIR /home/developer
 
 #### NVM
 ARG NODE_VERSION=v21.4.0
 
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
-ENV NVM_DIR="/root/.nvm"
+ENV NVM_DIR="$HOME/.nvm"
 
 RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION} && \
   nvm alias default ${NODE_VERSION} && \
   nvm use default
-
-#### Github CLI
-
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-  && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-  && sudo apt update \
-  && sudo apt install gh -y
-
-RUN sudo apt update \
-  && sudo apt install gh \
-  && rm -rf /var/lib/apt/lists/*
 
 #### Scala
 ARG JDK_VERSION=21.0.1-tem
@@ -68,10 +62,8 @@ ARG SBT_VERSION=1.9.7
 ARG SCALA_VERSION=3.3.1
 
 RUN curl -s "https://get.sdkman.io" | bash
-RUN sudo chmod a+x "/root/.sdkman/bin/sdkman-init.sh"
-RUN source "/root/.sdkman/bin/sdkman-init.sh" \
+RUN chmod a+x "$HOME/.sdkman/bin/sdkman-init.sh"
+RUN source "$HOME/.sdkman/bin/sdkman-init.sh" \
   && sdk install java ${JDK_VERSION} \
   && sdk install sbt ${SBT_VERSION} \
   && sdk install scala ${SCALA_VERSION}
-
-CMD sudo service start docker
