@@ -1,0 +1,27 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "asvetliakov.vscode-neovim",
+        "chrmarti.regex",
+        "dracula-theme.theme-dracula",
+        "esbenp.prettier-vscode",
+        "formulahendry.code-runner",
+        "ms-azuretools.vscode-docker",
+        "oderwat.indent-rainbow",
+        "scala-lang.scala",
+        "scalameta.metals",
+        "streetsidesoftware.code-spell-checker",
+        "usernamehw.errorlens",
+        "vscode-icons-team.vscode-icons",
+        "wayou.vscode-todo-highlight"
+      ]
+    },
+    "settings": {
+      "workbench.colorTheme": "Dracula"
+     }
+  }
+}
