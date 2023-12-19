@@ -15,14 +15,14 @@ object Page {
   case class Status(message: String, kind: StatusKind)
 
   object Urls {
-    val LOGIN            = "/login"
-    val SIGNUP           = "/signup"
-    val FORGOT_PASSWORD  = "/forgotpassword"
-    val RECOVER_PASSWORD = "/recoverpassword"
-    val HOME             = "/"
-    val JOBS             = "/jobs"
-    val EMPTY            = ""
-    val HASH             = "#"
+    val LOGIN           = "/login"
+    val SIGNUP          = "/signup"
+    val FORGOT_PASSWORD = "/forgotpassword"
+    val RESET_PASSWORD  = "/resetpassword"
+    val HOME            = "/"
+    val JOBS            = "/jobs"
+    val EMPTY           = ""
+    val HASH            = "#"
   }
 
   import Urls.*
@@ -30,7 +30,7 @@ object Page {
     case `LOGIN`                   => LoginPage()
     case `SIGNUP`                  => SignUpPage()
     case `FORGOT_PASSWORD`         => ForgotPasswordPage()
-    case `RECOVER_PASSWORD`        => RecoverPasswordPage()
+    case `RESET_PASSWORD`          => ResetPasswordPage()
     case `EMPTY` | `HOME` | `JOBS` => JobListPage()
     case s"/jobs/$id"              => JobPage(id)
     case _                         => NotFoundPage()
