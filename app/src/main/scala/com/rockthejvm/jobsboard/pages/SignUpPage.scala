@@ -98,7 +98,7 @@ object SignUpPage {
     val signup = new Endpoint[Msg] {
       override val location = Constants.endpoints.signup
       override val method   = Method.Post
-      override val onSuccess: Response => Msg = response =>
+      override val onResponse: Response => Msg = response =>
         response.status match {
           case Status(201, _) => SignUpSuccess("Success! Log in now.")
           case Status(s, _) if s >= 400 && s < 500 =>

@@ -79,7 +79,7 @@ object LoginPage {
       override val location: String          = Constants.endpoints.login
       override val method: Method            = Method.Post
       override val onError: HttpError => Msg = e => LoginError(e.toString)
-      override val onSuccess: Response => Msg = response => {
+      override val onResponse: Response => Msg = response => {
         val maybeToken = response.headers.get("authorization")
         maybeToken match {
           case Some(token) => LoginSuccess(token)
