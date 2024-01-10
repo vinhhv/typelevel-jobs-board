@@ -75,9 +75,7 @@ class App extends TyrianApp[App.Msg, App.Model] {
   def view(model: Model): Html[Msg] =
     div(
       Header.view(),
-      model.page.view(),
-      if (Session.isActive) span(model.session.email.getOrElse(""))
-      else span("Unauthenticated")
+      model.page.view()
     )
 
 }
