@@ -9,9 +9,11 @@ import tyrian.http.*
 
 import com.rockthejvm.jobsboard.*
 import com.rockthejvm.jobsboard.common.*
+import com.rockthejvm.jobsboard.components.*
 import com.rockthejvm.jobsboard.domain.job.*
 
 final case class JobListPage(
+    filterPanel: FilterPanel = FilterPanel(),
     jobs: List[Job] = List(),
     canLoadMore: Boolean = true,
     status: Option[Page.Status] = Some(Page.Status("Loading", Page.StatusKind.LOADING))
@@ -19,7 +21,7 @@ final case class JobListPage(
   import JobListPage.*
 
   override def initCmd: Cmd[IO, App.Msg] =
-    Commands.getJobs()
+    filterPanel.initCmd |+| Commands.getJobs()
 
     // update
   override def update(msg: App.Msg): (Page, Cmd[IO, App.Msg]) = msg match {
@@ -29,13 +31,19 @@ final case class JobListPage(
       (setErrorStatus(e), Cmd.None)
     case LoadMoreJobs =>
       (this, Commands.getJobs(offset = jobs.length))
+    case msg: FilterPanel.Msg =>
+      val (newFilterPanel, cmd) = filterPanel.update(msg)
+      (this.copy(filterPanel = newFilterPanel), cmd)
     case _ => (this, Cmd.None) // TODO
   }
 
   // render
   override def view(): Html[App.Msg] =
-    div(`class` := "jobs-container")(
-      jobs.map(renderJob) ++ maybeRenderLoadMore
+    div(`class` := "job-list-page")(
+      filterPanel.view(),
+      div(`class` := "jobs-container")(
+        jobs.map(renderJob) ++ maybeRenderLoadMore
+      )
     )
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,18 +101,11 @@ object JobListPage {
       override val location: String          = Constants.endpoints.jobs + s"?limit=$limit&offset=$offset"
       override val method: Method            = Method.Post
       override val onError: HttpError => Msg = e => SetErrorStatus(e.toString)
-      override val onResponse: Response => Msg = response =>
-        response.status match {
-          case Status(code, _) if code >= 200 && code < 300 =>
-            val json   = response.body
-            val parsed = parse(json).flatMap(_.as[List[Job]])
-            parsed match {
-              case Left(parsingError) => SetErrorStatus(s"Parsing error: $parsingError")
-              case Right(list)        => AddJobs(list, canLoadMore = offset == 0 || !list.isEmpty)
-            }
-          case Status(code, message) if code >= 400 && code < 600 =>
-            SetErrorStatus(s"Error: $message")
-        }
+      override val onResponse: Response => Msg =
+        Endpoint.onResponse[List[Job], Msg](
+          list => AddJobs(list, canLoadMore = offset == 0 || !list.isEmpty),
+          SetErrorStatus(_)
+        )
     }
   }
 

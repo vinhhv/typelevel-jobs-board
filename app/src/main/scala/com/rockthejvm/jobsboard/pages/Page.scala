@@ -4,6 +4,7 @@ import cats.effect.IO
 import tyrian.*
 
 import com.rockthejvm.jobsboard.*
+import com.rockthejvm.jobsboard.components.Component
 
 object Page {
   trait Msg
@@ -41,14 +42,4 @@ object Page {
   }
 }
 
-abstract class Page {
-  // API
-  // send a command upon instantiating
-  def initCmd: Cmd[IO, App.Msg]
-
-  // update
-  def update(msg: App.Msg): (Page, Cmd[IO, App.Msg])
-
-  // render
-  def view(): Html[App.Msg]
-}
+abstract class Page extends Component[App.Msg, Page]
