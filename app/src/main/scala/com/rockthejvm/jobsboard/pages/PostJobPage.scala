@@ -1,8 +1,10 @@
 package com.rockthejvm.jobsboard.pages
 
 import cats.effect.IO
+import cats.syntax.traverse.*
 import io.circe.generic.auto.*
 import io.circe.parser.*
+import org.scalajs.dom.{File, FileReader}
 import tyrian.*
 import tyrian.Html.*
 import tyrian.cmds.Logger
@@ -12,6 +14,8 @@ import com.rockthejvm.jobsboard.*
 import com.rockthejvm.jobsboard.common.*
 import com.rockthejvm.jobsboard.core.*
 import com.rockthejvm.jobsboard.domain.job.*
+
+import scala.util.Try
 
 case class PostJobPage(
     company: String = "",
@@ -57,6 +61,10 @@ case class PostJobPage(
       (this.copy(currency = Some(v)), Cmd.None)
     case UpdateCountry(v) =>
       (this.copy(country = Some(v)), Cmd.None)
+    case UpdateImageFile(maybeFile) =>
+      (this, Commands.loadFile(maybeFile))
+    case UpdateImage(maybeImage) =>
+      (this.copy(image = maybeImage), Logger.consoleLog[IO](s"I HAZ IMAGE: $maybeImage"))
     case UpdateTags(v) =>
       (this.copy(tags = Some(v)), Cmd.None)
     case UpdateSeniority(v) =>
@@ -102,11 +110,11 @@ case class PostJobPage(
     renderInput("ExternalUrl", "externalUrl", "text", true, UpdateExternalUrl(_)),
     renderInput("Remote", "remote", "checkbox", true, _ => ToggleRemote),
     renderInput("Location", "location", "text", true, UpdateLocation(_)),
-    renderInput("salaryLo", "salaryLo", "number", false, value => UpdateSalaryLo(value.toInt)),
-    renderInput("salaryHi", "salaryHi", "number", false, value => UpdateSalaryHi(value.toInt)),
+    renderInput("salaryLo", "salaryLo", "number", false, value => UpdateSalaryLo(parseNumber(value))),
+    renderInput("salaryHi", "salaryHi", "number", false, value => UpdateSalaryHi(parseNumber(value))),
     renderInput("currency", "currency", "text", false, UpdateCurrency(_)),
     renderInput("country", "country", "text", false, UpdateCountry(_)),
-    // TODO: add image upload
+    renderImageUploadInput("Logo", "logo", image, UpdateImageFile(_)),
     renderInput("tags", "tags", "text", false, UpdateTags(_)),
     renderInput("seniority", "seniority", "text", false, UpdateSeniority(_)),
     renderInput("other", "other", "text", false, UpdateOther(_)),
@@ -125,6 +133,9 @@ case class PostJobPage(
     )
 
   // util
+  private def parseNumber(s: String) =
+    Try(s.toInt).getOrElse(0)
+
   def setErrorStatus(message: String): Page =
     this.copy(status = Some(Page.Status(message, Page.StatusKind.ERROR)))
   def setSuccessStatus(message: String): Page =
@@ -132,20 +143,22 @@ case class PostJobPage(
 }
 
 object PostJobPage {
-  trait Msg                                         extends App.Msg
-  case class UpdateCompany(company: String)         extends Msg
-  case class UpdateTitle(title: String)             extends Msg
-  case class UpdateDescription(description: String) extends Msg
-  case class UpdateExternalUrl(externalUrl: String) extends Msg
-  case object ToggleRemote                          extends Msg
-  case class UpdateLocation(location: String)       extends Msg
-  case class UpdateSalaryLo(salaryLo: Int)          extends Msg
-  case class UpdateSalaryHi(salaryHi: Int)          extends Msg
-  case class UpdateCurrency(currency: String)       extends Msg
-  case class UpdateCountry(country: String)         extends Msg
-  case class UpdateTags(tags: String)               extends Msg
-  case class UpdateSeniority(seniority: String)     extends Msg
-  case class UpdateOther(other: String)             extends Msg
+  trait Msg                                           extends App.Msg
+  case class UpdateCompany(company: String)           extends Msg
+  case class UpdateTitle(title: String)               extends Msg
+  case class UpdateDescription(description: String)   extends Msg
+  case class UpdateExternalUrl(externalUrl: String)   extends Msg
+  case object ToggleRemote                            extends Msg
+  case class UpdateLocation(location: String)         extends Msg
+  case class UpdateSalaryLo(salaryLo: Int)            extends Msg
+  case class UpdateSalaryHi(salaryHi: Int)            extends Msg
+  case class UpdateCurrency(currency: String)         extends Msg
+  case class UpdateCountry(country: String)           extends Msg
+  case class UpdateImageFile(maybeFile: Option[File]) extends Msg
+  case class UpdateImage(maybeImage: Option[String])  extends Msg
+  case class UpdateTags(tags: String)                 extends Msg
+  case class UpdateSeniority(seniority: String)       extends Msg
+  case class UpdateOther(other: String)               extends Msg
   // Actions
   case object AttemptPostJob               extends Msg
   case class PostJobError(error: String)   extends Msg
@@ -210,5 +223,22 @@ object PostJobPage {
         other
       )
     )
+
+    def loadFile(maybeFile: Option[File]) =
+      Cmd.Run[IO, Option[String], Msg](
+        // run the effect here that returns an Option[String]
+        // Option[File] => Option[String]
+        // Option[File].traverse(file => IO[String]) => IO[Option[String]]
+        maybeFile.traverse { file =>
+          IO.async_ { cb =>
+            // create a reader
+            val reader = new FileReader
+            // set the onload
+            reader.onload = _ => cb(Right(reader.result.toString))
+            // trigger the reader
+            reader.readAsDataURL(file)
+          }
+        }
+      )(UpdateImage(_))
   }
 }
