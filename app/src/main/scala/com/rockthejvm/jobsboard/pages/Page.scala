@@ -13,7 +13,10 @@ object Page {
     case SUCCESS, ERROR, LOADING
   }
 
-  case class Status(message: String, kind: StatusKind)
+  final case class Status(message: String, kind: StatusKind)
+  object Status {
+    val LOADING = Status("Loading", StatusKind.LOADING)
+  }
 
   object Urls {
     val LOGIN           = "/login"
@@ -26,6 +29,7 @@ object Page {
     val POST_JOB        = "/postjob"
     val EMPTY           = ""
     val HASH            = "#"
+    def JOB(id: String) = s"/jobs/$id"
   }
 
   import Urls.*

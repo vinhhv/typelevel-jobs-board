@@ -9,6 +9,7 @@ import tyrian.http.*
 
 import com.rockthejvm.jobsboard.*
 import com.rockthejvm.jobsboard.common.*
+import com.rockthejvm.jobsboard.components.Anchors
 import com.rockthejvm.jobsboard.core.*
 import com.rockthejvm.jobsboard.domain.auth.*
 
@@ -49,7 +50,7 @@ final case class LoginPage(
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
     renderInput("Password", "password", "password", true, UpdatePassword(_)),
     button(`type` := "button", onClick(AttemptLogin))("Log in"),
-    renderAuxLink(Page.Urls.FORGOT_PASSWORD, "Forgot Password?")
+    Anchors.renderSimpleNavLink("Forgot Password?", Page.Urls.FORGOT_PASSWORD)
   )
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,7 @@ import tyrian.http.*
 
 import com.rockthejvm.jobsboard.*
 import com.rockthejvm.jobsboard.common.*
+import com.rockthejvm.jobsboard.components.Anchors
 import com.rockthejvm.jobsboard.domain.auth.ForgotPasswordInfo
 
 final case class ForgotPasswordPage(email: String = "", status: Option[Page.Status] = None)
@@ -32,7 +33,7 @@ final case class ForgotPasswordPage(email: String = "", status: Option[Page.Stat
   override protected def renderFormContent(): List[Html[App.Msg]] = List(
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
     button(`type` := "button", onClick(AttemptResetPassword))("Send Email"),
-    renderAuxLink(Page.Urls.RESET_PASSWORD, "Have a token?")
+    Anchors.renderSimpleNavLink("Have a token?", Page.Urls.RESET_PASSWORD)
   )
 
   // util
