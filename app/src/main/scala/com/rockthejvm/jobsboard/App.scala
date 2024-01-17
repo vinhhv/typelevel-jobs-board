@@ -75,7 +75,11 @@ class App extends TyrianApp[App.Msg, App.Model] {
   def view(model: Model): Html[Msg] =
     div(
       Header.view(),
-      model.page.view()
+      main(
+        div(`class` := "container-fluid")(
+          model.page.view()
+        )
+      )
     )
 
 }
