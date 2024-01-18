@@ -7,5 +7,8 @@
 		"parcel": "^2.10.3",
 		"process": "^0.11.10",
 		"sass": "^1.34.0"
+	},
+	"dependencies": {
+		"moment": "^2.30.1"
 	}
 }
