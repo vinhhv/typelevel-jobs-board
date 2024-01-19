@@ -8,6 +8,7 @@ import com.stripe.param.checkout.SessionCreateParams
 import org.typelevel.log4cats.Logger
 
 import com.rockthejvm.jobsboard.logging.syntax.*
+import com.rockthejvm.jobsboard.config.StripeConfig
 
 trait Stripe[F[_]] {
   /*
@@ -27,11 +28,10 @@ trait Stripe[F[_]] {
   def createCheckoutSession(jobId: String, userEmail: String): F[Option[Session]]
 }
 
-class LiveStripe[F[_]: MonadThrow: Logger] extends Stripe[F] {
+class LiveStripe[F[_]: MonadThrow: Logger](stripeConfig: StripeConfig) extends Stripe[F] {
   override def createCheckoutSession(jobId: String, userEmail: String): F[Option[Session]] = {
     // Globally set constant
-    TheStripe.apiKey =
-      "sk_test_51OaNapGTqL4gRKRDosL4RQuU9Dimou2D5ReXUaz04jE0xaB03g3dsGwwDCvDeMQSr0CXt0k5gIY9ULnDwm8Bkzk100UzO38s1f"
+    TheStripe.apiKey = stripeConfig.key
 
     SessionCreateParams
       .builder()
@@ -44,15 +44,15 @@ class LiveStripe[F[_]: MonadThrow: Logger] extends Stripe[F] {
       .setPaymentIntentData(
         SessionCreateParams.PaymentIntentData.builder().setReceiptEmail(userEmail).build()
       )
-      .setSuccessUrl(s"localhost:1234/job/$jobId") // need config
-      .setCancelUrl(s"localhost:1234")             // need config
+      .setSuccessUrl(s"${stripeConfig.successUrl}/$jobId")
+      .setCancelUrl(stripeConfig.cancelUrl)
       .setCustomerEmail(userEmail)
       .setClientReferenceId(jobId) // will be sent back to us by the webhook
       .addLineItem(
         SessionCreateParams.LineItem
           .builder()
           .setQuantity(1L)
-          .setPrice("price_1OaNejGTqL4gRKRDrqurcIft") // need config
+          .setPrice(stripeConfig.price)
           .build()
       )
       .build()
@@ -65,6 +65,6 @@ class LiveStripe[F[_]: MonadThrow: Logger] extends Stripe[F] {
 }
 
 object LiveStripe {
-  def apply[F[_]: MonadThrow: Logger](): F[LiveStripe[F]] =
-    new LiveStripe[F].pure[F]
+  def apply[F[_]: MonadThrow: Logger](stripeConfig: StripeConfig): F[LiveStripe[F]] =
+    new LiveStripe[F](stripeConfig).pure[F]
 }
