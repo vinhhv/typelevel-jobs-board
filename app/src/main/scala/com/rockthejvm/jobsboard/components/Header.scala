@@ -6,6 +6,7 @@ import tyrian.*
 import tyrian.Html.*
 
 import com.rockthejvm.jobsboard.*
+import com.rockthejvm.jobsboard.common.Constants
 import com.rockthejvm.jobsboard.core.*
 import com.rockthejvm.jobsboard.core.Router.ChangeLocation
 import com.rockthejvm.jobsboard.pages.*
@@ -42,10 +43,6 @@ object Header {
     )
 
   // private api
-  @js.native
-  @JSImport("/static/img/logo.png", JSImport.Default)
-  private val logoImage: String = js.native
-
   private def renderLogo() =
     a(
       href    := "/",
@@ -60,7 +57,7 @@ object Header {
     )(
       img(
         `class` := "home-logo",
-        src     := logoImage,
+        src     := Constants.logoImage,
         alt     := "Rock the JVM"
       )
     )
