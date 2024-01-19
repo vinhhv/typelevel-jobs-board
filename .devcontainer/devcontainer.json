@@ -25,7 +25,8 @@
       ]
     },
     "settings": {
-      "workbench.colorTheme": "Dracula"
-     }
+      "workbench.colorTheme": "Dracula",
+      "metals.javaHome": "/home/developer/.sdkman/candidates/java/current"
+    }
   }
 }
