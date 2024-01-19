@@ -24,7 +24,8 @@ import java.util.UUID
 import scala.collection.mutable
 import scala.language.implicitConversions
 
-class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]) extends HttpValidationDsl[F] {
+class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F], stripe: Stripe[F])
+    extends HttpValidationDsl[F] {
 
   object LimitQueryParam  extends OptionalQueryParamDecoderMatcher[Int]("limit")
   object OffsetQueryParam extends OptionalQueryParamDecoderMatcher[Int]("offset")
@@ -82,12 +83,24 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
     }
   }
 
+  // Stripe Endpoints
+  // POST /jobs/promoted { jobInfo }
+  private val promotedJobRoute: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "promoted" =>
+    req.validate[JobInfo] { jobInfo =>
+      for {
+        jobId   <- jobs.create("TODO@rockthejvm.com", jobInfo)
+        session <- stripe.createCheckoutSession(jobId.toString, "TODO@rockthejvm.com")
+        resp    <- session.map(sesh => Ok(sesh.getUrl())).getOrElse(NotFound())
+      } yield resp
+    }
+  }
+
   val authedRoutes = SecuredHandler[F].liftService(
     createJobRoute.restrictedTo(allRoles) |+|
       updateJobRoute.restrictedTo(allRoles) |+|
       deleteJobRoute.restrictedTo(allRoles)
   )
-  val unauthedRoutes = allFiltersRoute <+> allJobsRoute <+> findJobRoute
+  val unauthedRoutes = promotedJobRoute <+> allFiltersRoute <+> allJobsRoute <+> findJobRoute
 
   val routes = Router(
     "/jobs" -> (unauthedRoutes <+> authedRoutes)
@@ -95,6 +108,6 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
 }
 
 object JobRoutes {
-  def apply[F[_]: Concurrent: Logger: SecuredHandler](jobs: Jobs[F]) =
-    new JobRoutes[F](jobs)
+  def apply[F[_]: Concurrent: Logger: SecuredHandler](jobs: Jobs[F], stripe: Stripe[F]) =
+    new JobRoutes[F](jobs, stripe)
 }

@@ -21,7 +21,7 @@ import tsec.mac.jca.HMACSHA256
 class HttpApi[F[_]: Concurrent: Logger] private (core: Core[F], authenticator: Authenticator[F]) {
   given securedHandler: SecuredHandler[F] = SecuredRequestHandler(authenticator)
   private val healthRoutes                = HealthRoutes[F].routes
-  private val jobRoutes                   = JobRoutes[F](core.jobs).routes
+  private val jobRoutes                   = JobRoutes[F](core.jobs, core.stripe).routes
   private val authRoutes                  = AuthRoutes[F](core.auth, authenticator).routes
 
   val endpoints = Router(

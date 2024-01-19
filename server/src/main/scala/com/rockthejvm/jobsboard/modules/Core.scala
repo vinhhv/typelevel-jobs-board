@@ -8,7 +8,7 @@ import com.rockthejvm.jobsboard.core.*
 import doobie.util.transactor.Transactor
 import org.typelevel.log4cats.Logger
 
-final class Core[F[_]] private (val jobs: Jobs[F], val users: Users[F], val auth: Auth[F])
+final class Core[F[_]] private (val jobs: Jobs[F], val users: Users[F], val auth: Auth[F], val stripe: Stripe[F])
 
 object Core {
   def apply[F[_]: Async: Logger](
@@ -22,6 +22,7 @@ object Core {
       tokens <- LiveTokens[F](users)(xa, tokenConfig)
       emails <- LiveEmails[F](emailServiceConfig)
       auth   <- LiveAuth[F](users, tokens, emails)
-    } yield new Core(jobs, users, auth)
+      stripe <- LiveStripe[F]()
+    } yield new Core(jobs, users, auth, stripe)
     Resource.eval(coreF)
 }
