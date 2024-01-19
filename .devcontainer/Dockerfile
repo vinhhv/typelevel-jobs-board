@@ -36,6 +36,12 @@ RUN echo \
 RUN sudo apt-get update
 RUN sudo apt-get install -y docker-ce-cli
 
+### Stripe
+RUN curl -s https://packages.stripe.dev/api/security/keypair/stripe-cli-gpg/public | gpg --dearmor | sudo tee /usr/share/keyrings/stripe.gpg
+RUN echo "deb [signed-by=/usr/share/keyrings/stripe.gpg] https://packages.stripe.dev/stripe-cli-debian-local stable main" | sudo tee -a /etc/apt/sources.list.d/stripe.list
+RUN sudo apt update
+RUN sudo apt install -y stripe
+
 # Create non-root user and add to group to connect to host Docker daemon
 RUN groupadd -r developer && useradd -r -g developer -G sudo -m -s /bin/bash developer && \
   groupadd -g 800 docker && \
