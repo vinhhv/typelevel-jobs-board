@@ -94,7 +94,7 @@ class LiveStripe[F[_]: MonadThrow: Logger](stripeConfig: StripeConfig) extends S
               .sequence                      // F[Option[A]]
               .log(
                 {
-                  case None    => s"Event ${event.getId()} not producing any effect - check dashboard"
+                  case None    => s"Event ${event.getId()} not producing any effect - check API version matches"
                   case Some(_) => s"Event ${event.getId()} fully paid - OK"
                 },
                 error => s"Webhook action failed $error"

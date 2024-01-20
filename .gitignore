@@ -293,3 +293,6 @@ dist
 # VSCode devcontainer caching
 .devcontainer/.cache
 .devcontainer/.sbt
+
+# MacOS
+.DS_Store
