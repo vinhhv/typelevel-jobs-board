@@ -4,11 +4,15 @@ import cats.*
 import cats.implicits.*
 import com.stripe.{Stripe => TheStripe}
 import com.stripe.model.checkout.Session
+import com.stripe.net.Webhook
 import com.stripe.param.checkout.SessionCreateParams
 import org.typelevel.log4cats.Logger
 
-import com.rockthejvm.jobsboard.logging.syntax.*
 import com.rockthejvm.jobsboard.config.StripeConfig
+import com.rockthejvm.jobsboard.logging.syntax.*
+
+import scala.jdk.OptionConverters.*
+import scala.util.Try
 
 trait Stripe[F[_]] {
   /*
@@ -26,6 +30,7 @@ trait Stripe[F[_]] {
    * activate job <- webhook <- stripe
    */
   def createCheckoutSession(jobId: String, userEmail: String): F[Option[Session]]
+  def handleWebhookEvent[A](payload: String, signature: String, action: String => F[A]): F[Option[A]]
 }
 
 class LiveStripe[F[_]: MonadThrow: Logger](stripeConfig: StripeConfig) extends Stripe[F] {
@@ -62,6 +67,46 @@ class LiveStripe[F[_]: MonadThrow: Logger](stripeConfig: StripeConfig) extends S
       .logError(error => s"Creating checkout session failed: $error")
       .recover { case _ => None }
   }
+
+  override def handleWebhookEvent[A](payload: String, signature: String, action: String => F[A]): F[Option[A]] =
+    MonadThrow[F]
+      .fromTry(
+        Try(
+          Webhook.constructEvent(
+            payload,
+            signature,
+            stripeConfig.webhookSecret
+          )
+        )
+      )
+      .logError(error => "Stripe security verification failed - possibly fake attempt") // TODO: pass from config
+      .flatMap { event =>
+        event.getType() match {
+          case "checkout.session.completed" => // happy path
+            event
+              .getDataObjectDeserializer()
+              // Make sure API matches between build.sbt and API version for API key, or else silent failure (returns None)
+              .getObject()                   // Optional[Deserializer]
+              .toScala                       // Option[...]
+              .map(_.asInstanceOf[Session])  // Option[Session]
+              .map(_.getClientReferenceId()) // Option[String] <-- stores my job ID
+              .map(action)                   // Option[F[A]] performing the effect
+              .sequence                      // F[Option[A]]
+              .log(
+                {
+                  case None    => s"Event ${event.getId()} not producing any effect - check dashboard"
+                  case Some(_) => s"Event ${event.getId()} fully paid - OK"
+                },
+                error => s"Webhook action failed $error"
+              )
+
+          case _ =>
+            // discard the effect
+            None.pure[F]
+        }
+      }
+      .logError(error => s"Something else went wrong: $error") // TODO: pass from config
+      .recover { case _ => None }
 }
 
 object LiveStripe {
