@@ -3,11 +3,14 @@ package com.rockthejvm.jobsboard.http.routes
 import cats.effect.*
 import cats.effect.testing.scalatest.AsyncIOSpec
 import cats.implicits.*
+import com.rockthejvm.jobsboard.config.StripeConfig
 import com.rockthejvm.jobsboard.core.*
 import com.rockthejvm.jobsboard.domain.job.*
 import com.rockthejvm.jobsboard.domain.pagination.Pagination
 import com.rockthejvm.jobsboard.domain.security.*
 import com.rockthejvm.jobsboard.fixtures.*
+import com.stripe.model.checkout.Session
+import com.stripe.param.checkout.SessionCreateParams
 import io.circe.generic.auto.*
 import org.http4s.*
 import org.http4s.Uri.*
@@ -50,6 +53,9 @@ class JobRoutesSpec
       if (id == AwesomeJobUuid) IO.pure(Some(AwesomeJob))
       else IO.pure(None)
 
+    override def activate(id: UUID): IO[Int] =
+      IO.pure(1)
+
     override def delete(id: UUID): IO[Int] =
       if (id == AwesomeJobUuid) IO.pure(1)
       else IO.pure(0)
@@ -57,9 +63,19 @@ class JobRoutesSpec
     override def possibleFilters(): IO[JobFilter] = IO(defaultFilter)
   }
 
+  val stripe: Stripe[IO] = new LiveStripe[IO](
+    StripeConfig("key", "price", "example.com/test", "example.com/fail", "secret")
+  ) {
+    override def createCheckoutSession(jobId: String, userEmail: String): IO[Option[Session]] =
+      IO.pure(Some(Session.create(SessionCreateParams.builder().build())))
+
+    override def handleWebhookEvent[A](payload: String, signature: String, action: String => IO[A]): IO[Option[A]] =
+      IO.pure(None)
+  }
+
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
   // this is what we are testing
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs).routes
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs, stripe).routes
   val defaultFilter: JobFilter = JobFilter(
     companies = List("Awesome Company")
   )
