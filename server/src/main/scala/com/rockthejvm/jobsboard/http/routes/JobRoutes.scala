@@ -86,11 +86,11 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
 
   // Stripe Endpoints
   // POST /jobs/promoted { jobInfo }
-  private val promotedJobRoute: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "promoted" =>
-    req.validate[JobInfo] { jobInfo =>
+  private val promotedJobRoute: AuthRoute[F] = { case req @ POST -> Root / "promoted" asAuthed user =>
+    req.request.validate[JobInfo] { jobInfo =>
       for {
-        jobId   <- jobs.create("TODO@rockthejvm.com", jobInfo)
-        session <- stripe.createCheckoutSession(jobId.toString, "TODO@rockthejvm.com")
+        jobId   <- jobs.create(user.email, jobInfo)
+        session <- stripe.createCheckoutSession(jobId.toString, user.email)
         resp    <- session.map(sesh => Ok(sesh.getUrl())).getOrElse(NotFound())
       } yield resp
     }
@@ -114,11 +114,12 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
   }
 
   val authedRoutes = SecuredHandler[F].liftService(
-    createJobRoute.restrictedTo(allRoles) |+|
+    createJobRoute.restrictedTo(adminOnly) |+|
+      promotedJobRoute.restrictedTo(allRoles) |+|
       updateJobRoute.restrictedTo(allRoles) |+|
       deleteJobRoute.restrictedTo(allRoles)
   )
-  val unauthedRoutes = promotedJobRoute <+> promotedJobWebhook <+> allFiltersRoute <+> allJobsRoute <+> findJobRoute
+  val unauthedRoutes = allFiltersRoute <+> allJobsRoute <+> findJobRoute <+> promotedJobWebhook
 
   val routes = Router(
     "/jobs" -> (unauthedRoutes <+> authedRoutes)
