@@ -79,7 +79,8 @@ class App extends TyrianApp[App.Msg, App.Model] {
         div(`class` := "container-fluid")(
           model.page.view()
         )
-      )
+      ),
+      Footer.view()
     )
 
 }

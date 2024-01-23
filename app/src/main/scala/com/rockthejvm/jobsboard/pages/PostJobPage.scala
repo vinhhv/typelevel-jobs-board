@@ -117,7 +117,9 @@ case class PostJobPage(
         renderInput("tags", "tags", "text", false, UpdateTags(_)),
         renderInput("seniority", "seniority", "text", false, UpdateSeniority(_)),
         renderInput("other", "other", "text", false, UpdateOther(_)),
-        button(`type` := "button", onClick(AttemptPostJob))("Post Job")
+        button(`class` := "form-submit-btn", `type` := "button", onClick(AttemptPostJob))(
+          s"Post Job - $$${Constants.jobAdvertPriceUSD}"
+        )
       )
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

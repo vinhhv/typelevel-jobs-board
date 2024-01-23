@@ -8,10 +8,15 @@ object Constants {
   @JSImport("/static/img/logo.png", JSImport.Default)
   val logoImage: String = js.native
 
+  @js.native
+  @JSImport("/static/img/resume.png", JSImport.Default)
+  val jobImageDefault: String = js.native
+
   val emailRegex =
     """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$""".r
 
-  val defaultPageSize = 20
+  val defaultPageSize   = 20
+  val jobAdvertPriceUSD = 99
 
   object endpoints {
     val root            = "http://localhost:4041"
