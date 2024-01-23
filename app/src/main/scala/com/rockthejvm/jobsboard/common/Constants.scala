@@ -1,5 +1,7 @@
 package com.rockthejvm.jobsboard.common
 
+import org.scalajs.dom.window
+import scala.scalajs.LinkingInfo
 import scala.scalajs.js
 import scala.scalajs.js.annotation.*
 
@@ -19,7 +21,10 @@ object Constants {
   val jobAdvertPriceUSD = 99
 
   object endpoints {
-    val root            = "http://localhost:4041"
+    val root =
+      if (LinkingInfo.developmentMode) "http://localhost:4041"
+      else window.location.origin
+
     val signup          = s"$root/api/auth/users"
     val login           = s"$root/api/auth/login"
     val logout          = s"$root/api/auth/logout"
