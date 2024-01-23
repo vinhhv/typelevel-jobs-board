@@ -28,7 +28,7 @@ case class PostJobPage(
     salaryHi: Option[Int] = None,
     currency: Option[String] = None,
     country: Option[String] = None,
-    tags: Option[String] = None, // TODO: parse the tags before sending them to the server
+    tags: Option[String] = None,
     image: Option[String] = None,
     seniority: Option[String] = None,
     other: Option[String] = None,

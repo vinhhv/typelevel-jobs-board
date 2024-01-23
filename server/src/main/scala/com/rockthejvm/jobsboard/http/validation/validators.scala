@@ -100,7 +100,6 @@ object validators {
       .andThen(e => validateEmail(e, "email"))
 
     val validUserPassword = validateRequired(newUserInfo.password, "password")(_.nonEmpty)
-    // TODO: run password requirement logic
 
     (
       validUserEmail,
@@ -115,7 +114,6 @@ object validators {
   given NewPasswordInfoValidator: Validator[NewPasswordInfo] = (newPasswordInfo: NewPasswordInfo) => {
     val validOldPassword = validateRequired(newPasswordInfo.oldPassword, "old password")(_.nonEmpty)
     val validNewPassword = validateRequired(newPasswordInfo.newPassword, "new password")(_.nonEmpty)
-    // TODO: run password requirement logic
 
     (
       validOldPassword,

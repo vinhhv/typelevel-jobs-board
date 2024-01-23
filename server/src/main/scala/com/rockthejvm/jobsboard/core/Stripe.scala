@@ -79,7 +79,7 @@ class LiveStripe[F[_]: MonadThrow: Logger](stripeConfig: StripeConfig) extends S
           )
         )
       )
-      .logError(error => "Stripe security verification failed - possibly fake attempt") // TODO: pass from config
+      .logError(error => "Stripe security verification failed - possibly fake attempt")
       .flatMap { event =>
         event.getType() match {
           case "checkout.session.completed" => // happy path
@@ -105,7 +105,7 @@ class LiveStripe[F[_]: MonadThrow: Logger](stripeConfig: StripeConfig) extends S
             None.pure[F]
         }
       }
-      .logError(error => s"Something else went wrong: $error") // TODO: pass from config
+      .logError(error => s"Something else went wrong: $error")
       .recover { case _ => None }
 }
 

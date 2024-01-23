@@ -42,7 +42,7 @@ final case class ResetPasswordPage(
     case ResetPasswordSuccess =>
       (setSuccessStatus("Success! You can log in now."), Cmd.None)
 
-    case _ => (this, Cmd.None) // TODO
+    case _ => (this, Cmd.None)
   }
 
   override protected def renderFormContent(): List[Html[App.Msg]] = List(

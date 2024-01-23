@@ -39,7 +39,7 @@ final case class JobListPage(
     case msg: FilterPanel.Msg =>
       val (newFilterPanel, cmd) = filterPanel.update(msg)
       (this.copy(filterPanel = newFilterPanel), cmd)
-    case _ => (this, Cmd.None) // TODO
+    case _ => (this, Cmd.None)
   }
 
   // render

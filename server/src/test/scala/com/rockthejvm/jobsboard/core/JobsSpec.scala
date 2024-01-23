@@ -46,7 +46,7 @@ class JobsSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers with DoobieS
     transactor.use { xa =>
       val program = for {
         jobs      <- LiveJobs[IO](xa)
-        retrieved <- jobs.all()
+        retrieved <- jobs.all().compile.toList
       } yield retrieved
 
       program.asserting(_ shouldBe List(AwesomeJob))

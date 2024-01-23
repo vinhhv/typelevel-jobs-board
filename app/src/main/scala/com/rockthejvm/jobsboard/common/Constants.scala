@@ -9,7 +9,7 @@ object Constants {
   val logoImage: String = js.native
 
   @js.native
-  @JSImport("/static/img/resume.png", JSImport.Default)
+  @JSImport("/static/img/job-image-default.png", JSImport.Default)
   val jobImageDefault: String = js.native
 
   val emailRegex =

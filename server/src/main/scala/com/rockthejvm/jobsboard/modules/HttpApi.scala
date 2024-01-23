@@ -55,7 +55,7 @@ object HttpApi {
     }
 
     // 3. hashing key
-    val keyF = HMACSHA256.buildKey[F](securityConfig.secret.getBytes("UTF-8")) // TODO: move to config
+    val keyF = HMACSHA256.buildKey[F](securityConfig.secret.getBytes("UTF-8"))
 
     for {
       key        <- keyF

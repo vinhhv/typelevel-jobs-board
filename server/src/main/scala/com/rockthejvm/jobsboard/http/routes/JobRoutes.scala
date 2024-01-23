@@ -106,7 +106,7 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
             payload,
             signature,
             jobId => jobs.activate(UUID.fromString(jobId))
-          ) // TODO
+          )
           response <- if (handled.nonEmpty) Ok() else NoContent()
         } yield response
       case None => Logger[F].info("Got webhook event with no Stripe signature") *> Forbidden("No Stripe signature")
