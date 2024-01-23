@@ -58,7 +58,7 @@ case class PostJobPage(
     case UpdateCountry(v) =>
       (this.copy(country = Some(v)), Cmd.None)
     case UpdateImageFile(maybeFile) =>
-      (this, Commands.loadFileBasic(maybeFile))
+      (this, Commands.loadFile(maybeFile))
     case UpdateImage(maybeImage) =>
       (this.copy(image = maybeImage), Logger.consoleLog[IO](s"I HAZ IMAGE: $maybeImage"))
     case UpdateTags(v) =>
