@@ -103,6 +103,7 @@ lazy val stagingBuild = (project in (file("build/staging")))
     scalaVersion    := scala3Version,
     organization    := rockthejvm,
     dockerBaseImage := "openjdk:21-jdk-slim-buster",
+    dockerBuildOptions ++= Seq("--platform=linux/amd64"),
     dockerExposedPorts ++= Seq(4041),
     Compile / mainClass         := Some("com.rockthejvm.jobsboard.Application"),
     Compile / resourceDirectory := ((server / Compile / resourceDirectory).value / "staging")

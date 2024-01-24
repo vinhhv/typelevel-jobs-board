@@ -37,7 +37,7 @@ object Application extends IOApp.Simple {
             .default[IO]
             .withHost(emberConfig.host)
             .withPort(emberConfig.port)
-            .withHttpApp(CORS(httpApi.endpoints).orNotFound) // TODO: remove before deploying
+            .withHttpApp(httpApi.endpoints.orNotFound) // TODO: remove before deploying
             .build
         } yield server
         appResource.use(_ => IO.println("Server ready!") *> IO.never)
