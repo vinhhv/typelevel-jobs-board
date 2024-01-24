@@ -60,7 +60,7 @@ case class PostJobPage(
     case UpdateImageFile(maybeFile) =>
       (this, Commands.loadFile(maybeFile))
     case UpdateImage(maybeImage) =>
-      (this.copy(image = maybeImage), Logger.consoleLog[IO](s"I HAZ IMAGE: $maybeImage"))
+      (this.copy(image = maybeImage), Cmd.None)
     case UpdateTags(v) =>
       (this.copy(tags = Some(v)), Cmd.None)
     case UpdateSeniority(v) =>
