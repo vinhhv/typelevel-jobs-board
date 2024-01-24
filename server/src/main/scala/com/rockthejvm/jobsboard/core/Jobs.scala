@@ -179,12 +179,11 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
         AND remote = [filter.remote]
      */
 
-    Logger[F].info(statement.toString) *>
-      statement
-        .query[Job]
-        .to[List]
-        .transact(xa)
-        .logError(e => s"Failed query: ${e.getMessage}")
+    statement
+      .query[Job]
+      .to[List]
+      .transact(xa)
+      .logError(e => s"Failed query: ${e.getMessage}")
   }
 
   def find(id: UUID): F[Option[Job]] =

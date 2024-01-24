@@ -33,7 +33,29 @@ object HttpApi {
 
   def createAuthenticator[F[_]: Sync](users: Users[F], securityConfig: SecurityConfig): F[Authenticator[F]] = {
     // 1. identity store for retrieve users: String => OptionT[F, User]
-    val idStore: IdentityStore[F, String, User] = (email: String) => OptionT(users.find(email))
+    val idStoreF: F[IdentityStore[F, String, User]] =
+      Ref.of[F, Map[String, User]](Map.empty).map { ref =>
+        new BackingStore[F, String, User] {
+          override def get(email: String): OptionT[F, User] = {
+            val effect = for {
+              inMemoryUser <- ref.get.map(imm => imm.get(email))
+              maybeUser    <- if (inMemoryUser.isEmpty) users.find(email) else inMemoryUser.pure[F]
+              _            <- if (inMemoryUser.isEmpty) maybeUser.map(put).sequence else None.pure[F]
+            } yield maybeUser
+
+            OptionT(effect)
+          }
+
+          override def put(user: User): F[User] =
+            ref.modify(imm => (imm + (user.email -> user), user))
+
+          override def update(user: User): F[User] =
+            put(user)
+
+          override def delete(email: String): F[Unit] =
+            ref.modify(imm => (imm - email, ()))
+        }
+      }
 
     // 2. backing store for JWT tokens: BackingStore[F, id, JwtToken
     val tokenStoreF = Ref.of[F, Map[SecureRandomId, JwtToken]](Map.empty).map { ref =>
@@ -60,6 +82,7 @@ object HttpApi {
     for {
       key        <- keyF
       tokenStore <- tokenStoreF
+      idStore    <- idStoreF
       // 4. jwt authenticator
       authenticator = JWTAuthenticator.backed.inBearerToken(
         expiryDuration = securityConfig.jwtExpiryDuration, // expiration of tokens
