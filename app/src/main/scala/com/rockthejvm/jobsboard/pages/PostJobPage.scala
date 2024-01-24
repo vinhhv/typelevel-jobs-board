@@ -271,7 +271,7 @@ object PostJobPage {
       )(UpdateImage(_))
 
     private def computeDimensions(w: Int, h: Int): (Int, Int) =
-      if (w > h) {
+      if (w >= h) {
         val ratio = w * 1.0 / 256
         val w1    = w / ratio
         val h1    = h / ratio
