@@ -1,6 +1,10 @@
 package com.rockthejvm.jobsboard.pages
 
 import cats.effect.IO
+import com.rockthejvm.jobsboard.*
+import com.rockthejvm.jobsboard.common.*
+import com.rockthejvm.jobsboard.components.*
+import com.rockthejvm.jobsboard.domain.job.*
 import io.circe.generic.auto.*
 import laika.api.*
 import laika.format.*
@@ -8,13 +12,8 @@ import tyrian.*
 import tyrian.Html.*
 import tyrian.http.*
 
-import com.rockthejvm.jobsboard.*
-import com.rockthejvm.jobsboard.common.*
-import com.rockthejvm.jobsboard.components.*
-import com.rockthejvm.jobsboard.domain.job.*
-
 import scala.scalajs.*
-import scala.scalajs.js.* // js.native
+import scala.scalajs.js.*
 import scala.scalajs.js.annotation.*
 
 @js.native
@@ -105,16 +104,17 @@ final case class JobPage(
     )
 
   private def renderJobDescription(job: Job) = {
-    val descriptionHtml = markdownTransformer.transform(job.jobInfo.description) match {
-      case Left(e) =>
-        """
-        Damnit.
-        Had an error showing Markdown for this job description.
-        Just hit the apply button (that should still work) - also let them know the problem
-        """
-      case Right(html) => html
-    }
-    div(`class` := "job-description")().innerHtml(descriptionHtml)
+    // BUG: Markdown breaks webpage with out of memory error
+    // val descriptionHtml = markdownTransformer.transform(job.jobInfo.description) match {
+    //   case Left(e) =>
+    //     """
+    //     Damnit.
+    //     Had an error showing Markdown for this job description.
+    //     Just hit the apply button (that should still work) - also let them know the problem
+    //     """
+    //   case Right(html) => html
+    // }
+    div(`class` := "job-description")(job.jobInfo.description)
   }
 
   private def renderNoJobPage() =

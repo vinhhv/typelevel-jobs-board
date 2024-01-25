@@ -26,7 +26,7 @@ lazy val core = (crossProject(JSPlatform, JVMPlatform) in file("common"))
 
 lazy val tyrianVersion = "0.6.1"
 lazy val fs2DomVersion = "0.1.0"
-lazy val laikaVersion  = "0.19.0"
+lazy val laikaVersion  = "1.0.0"
 lazy val circeVersion  = "0.14.0"
 
 lazy val app = (project in file("app"))
@@ -38,7 +38,7 @@ lazy val app = (project in file("app"))
     libraryDependencies ++= Seq(
       "io.indigoengine" %%% "tyrian-io"     % tyrianVersion,
       "com.armanbilge"  %%% "fs2-dom"       % fs2DomVersion,
-      "org.planet42"    %%% "laika-core"    % laikaVersion,
+      "org.typelevel"   %%% "laika-core"    % laikaVersion,
       "io.circe"        %%% "circe-core"    % circeVersion,
       "io.circe"        %%% "circe-parser"  % circeVersion,
       "io.circe"        %%% "circe-generic" % circeVersion
